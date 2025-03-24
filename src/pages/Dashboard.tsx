@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import WalletOverview from '../components/WalletOverview';
@@ -7,7 +6,7 @@ import VoiceInterface from '../components/VoiceInterface';
 import AIAssistant from '../components/AIAssistant';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Wallet, ChevronDown, LogOut, ExternalLink, Copy, Check } from 'lucide-react';
+import { Wallet, ChevronDown, LogOut, ExternalLink, Copy, Check, X } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +14,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 const Dashboard = () => {
   const [lastCommand, setLastCommand] = useState<string | null>(null);
@@ -23,6 +30,7 @@ const Dashboard = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [showWalletDialog, setShowWalletDialog] = useState(false);
   
   // This effect generates a random wallet address when connecting
   useEffect(() => {
@@ -113,6 +121,7 @@ const Dashboard = () => {
       setWalletConnected(true);
       setConnectedWalletType(walletType);
       setIsConnecting(false);
+      setShowWalletDialog(false);
       
       toast({
         title: "Wallet Connected",
@@ -174,14 +183,18 @@ const Dashboard = () => {
         return "https://phantom.app/favicon.ico";
       case "Solflare":
         return "https://solflare.com/favicon.ico";
+      case "Magic Eden":
+        return "https://magiceden.io/favicon.ico";
+      case "OKX Wallet":
+        return "https://www.okx.com/favicon.ico";
       case "Backpack":
         return "https://www.backpack.app/favicon.ico";
-      case "Ledger":
-        return "https://www.ledger.com/favicon.ico";
-      case "Brave":
-        return "https://brave.com/static-assets/images/brave-favicon.png";
-      case "Glow":
-        return "https://glow.app/favicon.ico";
+      case "Torus":
+        return "https://tor.us/favicon.ico";
+      case "MathWallet":
+        return "https://mathwallet.org/favicon.ico";
+      case "Coinbase Wallet":
+        return "https://www.coinbase.com/favicon.ico";
       default:
         return "";
     }
@@ -209,44 +222,59 @@ const Dashboard = () => {
     }
   };
 
+  const walletOptions = [
+    { name: "Phantom", detected: true },
+    { name: "Solflare", detected: true },
+    { name: "Magic Eden", detected: true },
+    { name: "OKX Wallet", detected: true },
+    { name: "Backpack", detected: true },
+    { name: "Torus", detected: true },
+    { name: "MathWallet", detected: false },
+    { name: "Coinbase Wallet", detected: false }
+  ];
+
   return <Layout>
       <div className="container px-4 md:px-6 py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <h1 className="text-3xl font-bold animate-fade-in my-[37px] mx-[5px]">Dashboard</h1>
           
           {!walletConnected ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <Dialog open={showWalletDialog} onOpenChange={setShowWalletDialog}>
+              <DialogTrigger asChild>
                 <Button 
                   className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90 transition-opacity duration-300 gap-2"
                   disabled={isConnecting}
                 >
                   <Wallet className="h-4 w-4" /> 
-                  {isConnecting ? 'Connecting...' : 'Connect Wallet'} 
-                  <ChevronDown className="h-3 w-3 ml-1" />
+                  {isConnecting ? 'Connecting...' : 'Connect Wallet'}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-background/95 backdrop-blur-sm border-solana/20">
-                <DropdownMenuItem onClick={() => connectWallet("Phantom")} className="cursor-pointer flex items-center gap-2">
-                  <img src="https://phantom.app/favicon.ico" alt="Phantom" className="h-5 w-5" /> Phantom
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => connectWallet("Solflare")} className="cursor-pointer flex items-center gap-2">
-                  <img src="https://solflare.com/favicon.ico" alt="Solflare" className="h-5 w-5" /> Solflare
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => connectWallet("Backpack")} className="cursor-pointer flex items-center gap-2">
-                  <img src="https://www.backpack.app/favicon.ico" alt="Backpack" className="h-5 w-5" /> Backpack
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => connectWallet("Ledger")} className="cursor-pointer flex items-center gap-2">
-                  <img src="https://www.ledger.com/favicon.ico" alt="Ledger" className="h-5 w-5" /> Ledger
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => connectWallet("Brave")} className="cursor-pointer flex items-center gap-2">
-                  <img src="https://brave.com/static-assets/images/brave-favicon.png" alt="Brave" className="h-5 w-5" /> Brave Wallet
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => connectWallet("Glow")} className="cursor-pointer flex items-center gap-2">
-                  <img src="https://glow.app/favicon.ico" alt="Glow" className="h-5 w-5" /> Glow
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </DialogTrigger>
+              <DialogContent className="p-0 border-0 rounded-lg overflow-hidden bg-transparent shadow-2xl max-w-xs w-full">
+                <div className="bg-[#0e0e12] text-white p-5 relative">
+                  <DialogHeader className="pb-4">
+                    <DialogTitle className="text-center text-xl font-medium">Connect a wallet on Solana to continue</DialogTitle>
+                  </DialogHeader>
+                  <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-white">
+                    <X className="h-4 w-4" />
+                  </DialogClose>
+                </div>
+                <div className="bg-gradient-to-b from-[#5846f9]/20 to-[#1de9b6]/20 backdrop-blur-sm">
+                  {walletOptions.map((wallet, index) => (
+                    <div 
+                      key={wallet.name}
+                      onClick={() => connectWallet(wallet.name)}
+                      className="flex items-center justify-between p-4 hover:bg-white/10 transition-colors cursor-pointer border-t border-white/10 first:border-t-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img src={getWalletIcon(wallet.name)} alt={wallet.name} className="h-6 w-6 rounded-full" />
+                        <span className="text-white font-medium">{wallet.name}</span>
+                      </div>
+                      {wallet.detected && <span className="text-[#1de9b6] text-sm">Detected</span>}
+                    </div>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
