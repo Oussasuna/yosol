@@ -4,12 +4,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Wallet, ArrowRight, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const NavBar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,6 +44,18 @@ const NavBar: React.FC = () => {
     }
     // All other links use their default behavior
   };
+
+  // Close mobile menu when window is resized to desktop size
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [mobileMenuOpen]);
 
   return (
     <header 
@@ -104,7 +118,7 @@ const NavBar: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Link to="/dashboard">
+            <Link to="/dashboard" className="hidden sm:block">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -115,12 +129,13 @@ const NavBar: React.FC = () => {
               </motion.div>
             </Link>
             
-            <div className="md:hidden">
+            <div className="block md:hidden">
               <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={toggleMobileMenu}
-                className="text-foreground"
+                className="text-white hover:bg-white/10"
+                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               >
                 {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </Button>
@@ -133,13 +148,13 @@ const NavBar: React.FC = () => {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div 
-            className="md:hidden fixed inset-0 top-16 z-40 glass-card"
+            className="md:hidden fixed inset-0 top-16 z-40 bg-black/90 backdrop-blur-md"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="p-6 flex flex-col space-y-4">
+            <div className="p-6 flex flex-col space-y-6">
               {[
                 { path: '/', label: 'Home' },
                 { path: '/dashboard', label: 'Dashboard' },
@@ -154,7 +169,7 @@ const NavBar: React.FC = () => {
                 >
                   <Link 
                     to={item.path} 
-                    className={`text-lg font-medium ${location.pathname === item.path ? 'text-solana' : 'text-foreground'}`}
+                    className={`text-lg font-medium ${location.pathname === item.path ? 'text-solana' : 'text-white'}`}
                     onClick={(e) => {
                       setMobileMenuOpen(false);
                       if (item.path === '/') {
@@ -166,6 +181,24 @@ const NavBar: React.FC = () => {
                   </Link>
                 </motion.div>
               ))}
+              
+              {/* Add Launch App button to mobile menu */}
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: 0.25 }}
+                className="pt-2"
+              >
+                <Link 
+                  to="/dashboard" 
+                  className="inline-block"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Button className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90 transition-opacity duration-300 gap-2 group w-full sm:w-auto">
+                    Launch App <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                  </Button>
+                </Link>
+              </motion.div>
             </div>
           </motion.div>
         )}
