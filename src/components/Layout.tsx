@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import NavBar from './NavBar';
 import { motion } from 'framer-motion';
@@ -14,6 +13,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const wavePointsRef = useRef<THREE.Points | null>(null);
+  const audioAnalyserRef = useRef<AnalyserNode | null>(null);
   
   useEffect(() => {
     if (!containerRef.current) return;
@@ -52,44 +53,56 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     directionalLight.position.set(1, 1, 1);
     scene.add(directionalLight);
     
-    // Create sound wave particles
-    const particleCount = 2000;
-    const particles = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    const colors = new Float32Array(particleCount * 3);
+    // Create circular voice visualization
+    const voiceGeometry = new THREE.BufferGeometry();
+    const voicePositions = new Float32Array(2000 * 3);
+    const voiceColors = new Float32Array(2000 * 3);
     
-    for (let i = 0; i < particleCount * 3; i += 3) {
-      // Position
-      positions[i] = (Math.random() - 0.5) * 20;
-      positions[i + 1] = (Math.random() - 0.5) * 20;
-      positions[i + 2] = (Math.random() - 0.5) * 20;
-      
-      // Color - use gradients between solana colors and wallet accent
-      const ratio = Math.random();
-      colors[i] = ratio * 0.2 + 0.1; // R - dark blue to teal
-      colors[i + 1] = ratio * 0.5 + 0.2; // G - increase for teal
-      colors[i + 2] = ratio * 0.7 + 0.3; // B - strong blue/purple
+    // Create circular pattern
+    const radius = 2;
+    const segments = 100;
+    const layers = 20;
+    
+    for (let i = 0; i < segments; i++) {
+      for (let j = 0; j < layers; j++) {
+        const index = (i * layers + j) * 3;
+        const angle = (i / segments) * Math.PI * 2;
+        const layerRadius = radius * (0.5 + j / layers * 0.5);
+        
+        voicePositions[index] = Math.cos(angle) * layerRadius;
+        voicePositions[index + 1] = Math.sin(angle) * layerRadius;
+        voicePositions[index + 2] = (j / layers - 0.5) * 2;
+        
+        // Color gradient from solana colors to wallet accent
+        voiceColors[index] = 0.2 + j / layers * 0.5; // R - purplish to teal
+        voiceColors[index + 1] = 0.1 + j / layers * 0.6; // G - increase for teal
+        voiceColors[index + 2] = 0.6 - j / layers * 0.3; // B - decrease for teal
+      }
     }
     
-    particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    voiceGeometry.setAttribute('position', new THREE.BufferAttribute(voicePositions, 3));
+    voiceGeometry.setAttribute('color', new THREE.BufferAttribute(voiceColors, 3));
     
-    const particleMaterial = new THREE.PointsMaterial({
+    const voiceMaterial = new THREE.PointsMaterial({
       size: 0.05,
       vertexColors: true,
       transparent: true,
       opacity: 0.7
     });
     
-    const particleSystem = new THREE.Points(particles, particleMaterial);
-    scene.add(particleSystem);
+    const voicePoints = new THREE.Points(voiceGeometry, voiceMaterial);
+    scene.add(voicePoints);
+    wavePointsRef.current = voicePoints;
     
-    // Create wallet model - simple cube as placeholder
-    const walletGeometry = new THREE.BoxGeometry(1.5, 1, 0.2);
+    // Center voice visualization
+    voicePoints.position.set(-0.5, 0, 0);
+    
+    // Create wallet object
+    const walletGeometry = new THREE.BoxGeometry(1, 0.7, 0.15);
     const walletMaterial = new THREE.MeshPhongMaterial({ 
       color: 0x14f195, // Solana green
       emissive: 0x14f195,
-      emissiveIntensity: 0.2,
+      emissiveIntensity: 0.3,
       specular: 0xffffff,
       shininess: 30
     });
@@ -97,43 +110,130 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     wallet.position.set(1.5, 0, 0);
     scene.add(wallet);
     
-    // Create sound waves
-    const waveCount = 5;
-    const waves: THREE.Mesh[] = [];
+    // Create sound wave connection between voice and wallet
+    const connectionPoints = 8;
+    const connectionGeometry = new THREE.BufferGeometry();
+    const connectionPositions = new Float32Array(connectionPoints * 3);
+    const connectionColors = new Float32Array(connectionPoints * 3);
     
-    for (let i = 0; i < waveCount; i++) {
-      const torusGeometry = new THREE.TorusGeometry(0.5 + i * 0.2, 0.02, 16, 100);
-      const torusMaterial = new THREE.MeshPhongMaterial({ 
-        color: 0x9945ff, // Solana purple
-        transparent: true,
-        opacity: 0.7 - (i * 0.1)
-      });
-      const torus = new THREE.Mesh(torusGeometry, torusMaterial);
-      torus.rotation.x = Math.PI / 2;
-      torus.position.set(-1.5, 0, 0);
-      scene.add(torus);
-      waves.push(torus);
+    for (let i = 0; i < connectionPoints; i++) {
+      const index = i * 3;
+      const t = i / (connectionPoints - 1);
+      
+      connectionPositions[index] = -0.5 + t * 2;
+      connectionPositions[index + 1] = 0;
+      connectionPositions[index + 2] = 0;
+      
+      // Gradient from voice to wallet
+      connectionColors[index] = 0.6 - t * 0.4; // R - more in wallet
+      connectionColors[index + 1] = 0.1 + t * 0.7; // G - more in wallet
+      connectionColors[index + 2] = 0.6 - t * 0.3; // B - more in voice
     }
-
+    
+    connectionGeometry.setAttribute('position', new THREE.BufferAttribute(connectionPositions, 3));
+    connectionGeometry.setAttribute('color', new THREE.BufferAttribute(connectionColors, 3));
+    
+    const connectionMaterial = new THREE.LineBasicMaterial({
+      vertexColors: true,
+      linewidth: 3
+    });
+    
+    const connectionLine = new THREE.Line(connectionGeometry, connectionMaterial);
+    scene.add(connectionLine);
+    
+    // Add particle background
+    const particleCount = 1000;
+    const particles = new THREE.BufferGeometry();
+    const particlePositions = new Float32Array(particleCount * 3);
+    const particleColors = new Float32Array(particleCount * 3);
+    
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      particlePositions[i] = (Math.random() - 0.5) * 20;
+      particlePositions[i + 1] = (Math.random() - 0.5) * 20;
+      particlePositions[i + 2] = (Math.random() - 0.5) * 20 - 5; // Push back in z
+      
+      // Color - subtle background particles
+      particleColors[i] = 0.1 + Math.random() * 0.1;
+      particleColors[i + 1] = 0.1 + Math.random() * 0.1;
+      particleColors[i + 2] = 0.2 + Math.random() * 0.2;
+    }
+    
+    particles.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    particles.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+    
+    const particleMaterial = new THREE.PointsMaterial({
+      size: 0.03,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.5
+    });
+    
+    const particleSystem = new THREE.Points(particles, particleMaterial);
+    scene.add(particleSystem);
+    
     // Animation
     const animate = () => {
       requestAnimationFrame(animate);
       
-      if (!sceneRef.current || !cameraRef.current || !rendererRef.current) return;
+      if (!sceneRef.current || !cameraRef.current || !rendererRef.current || !wavePointsRef.current) return;
       
-      // Rotate particle system slowly
-      particleSystem.rotation.x += 0.0005;
-      particleSystem.rotation.y += 0.0005;
+      // Simulate voice audio waves
+      const positions = wavePointsRef.current.geometry.attributes.position.array as Float32Array;
+      const segments = 100;
+      const layers = 20;
       
-      // Animate wallet
-      wallet.rotation.y += 0.01;
+      for (let i = 0; i < segments; i++) {
+        for (let j = 0; j < layers; j++) {
+          const index = (i * layers + j) * 3;
+          const angle = (i / segments) * Math.PI * 2;
+          
+          // Base radius with wave effect
+          const time = Date.now() * 0.001;
+          const waveSpeed = 3;
+          const waveHeight = 0.2;
+          const baseRadius = 2 * (0.5 + j / layers * 0.5);
+          
+          // Create wave effect based on angle and time
+          const wave1 = Math.sin(angle * 8 + time * waveSpeed) * waveHeight * (j / layers);
+          const wave2 = Math.cos(angle * 6 + time * (waveSpeed * 0.8)) * waveHeight * (j / layers);
+          const combinedWave = wave1 + wave2;
+          
+          const radius = baseRadius + combinedWave;
+          
+          positions[index] = Math.cos(angle) * radius;
+          positions[index + 1] = Math.sin(angle) * radius;
+          
+          // Add subtle z-movement
+          positions[index + 2] = (j / layers - 0.5) * 2 + Math.sin(time * 2 + j * 0.2) * 0.1;
+        }
+      }
       
-      // Animate sound waves
-      waves.forEach((wave, index) => {
-        wave.scale.x = 1 + 0.1 * Math.sin(Date.now() * 0.001 + index * 0.5);
-        wave.scale.y = 1 + 0.1 * Math.sin(Date.now() * 0.001 + index * 0.5);
-        wave.scale.z = 1 + 0.1 * Math.sin(Date.now() * 0.001 + index * 0.5);
-      });
+      // Update the geometry
+      wavePointsRef.current.geometry.attributes.position.needsUpdate = true;
+      
+      // Rotate objects slightly
+      wallet.rotation.y += 0.005;
+      wallet.rotation.x = Math.sin(Date.now() * 0.001) * 0.1;
+      
+      // Rotate particle system
+      particleSystem.rotation.y += 0.0002;
+      
+      // Update connection line with wave effect
+      const connectionPositions = connectionLine.geometry.attributes.position.array as Float32Array;
+      for (let i = 0; i < connectionPoints; i++) {
+        const index = i * 3;
+        const t = i / (connectionPoints - 1);
+        
+        // Keep x position for smooth connection
+        connectionPositions[index] = -0.5 + t * 2;
+        
+        // Add wave to y position
+        const time = Date.now() * 0.002;
+        const waveHeight = 0.15;
+        const wave = Math.sin(t * 10 + time * 5) * waveHeight * Math.sin(t * Math.PI);
+        connectionPositions[index + 1] = wave;
+      }
+      connectionLine.geometry.attributes.position.needsUpdate = true;
       
       renderer.render(sceneRef.current, cameraRef.current);
     };
