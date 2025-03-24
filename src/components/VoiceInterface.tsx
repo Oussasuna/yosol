@@ -15,7 +15,15 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
     setIsAnimating(true);
     // Simulating voice recognition start
     setTimeout(() => {
-      setCommand('Send 5 SOL to wallet ending in 7X4F...');
+      // Randomize example commands to showcase different features
+      const exampleCommands = [
+        'Send 5 SOL to wallet ending in 7X4F...',
+        'Check current SOL price',
+        'Stake 10 SOL for maximum yield',
+        'Set price alert for SOL at $150',
+      ];
+      const randomCommand = exampleCommands[Math.floor(Math.random() * exampleCommands.length)];
+      setCommand(randomCommand);
       // In a real implementation, we would connect to the device's microphone
     }, 1500);
   };
@@ -106,7 +114,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       )}
 
       <div className="mt-6 text-center">
-        <p className="text-xs text-muted-foreground">Try: "Send SOL", "Check balance", "Market insights"</p>
+        <p className="text-xs text-muted-foreground">Try: "Send SOL", "Check price", "Stake tokens", "Set alert"</p>
       </div>
     </div>
   );
