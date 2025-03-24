@@ -3,18 +3,29 @@ import React, { useState, useEffect } from 'react';
 import { ArrowUp, ArrowDown, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const WalletOverview: React.FC = () => {
+interface WalletOverviewProps {
+  walletConnected?: boolean;
+  walletAddress?: string | null;
+  walletType?: string | null;
+}
+
+const WalletOverview: React.FC<WalletOverviewProps> = ({ 
+  walletConnected = false, 
+  walletAddress = null,
+  walletType = null
+}) => {
   const [isCopied, setIsCopied] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const walletAddress = 'DJkx7m12xUF4mXVfgP5yEFGwxYfFkXgYLANvuKtWg6w7';
-  const shortAddress = `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
+  const defaultAddress = 'DJkx7m12xUF4mXVfgP5yEFGwxYfFkXgYLANvuKtWg6w7';
+  const displayAddress = walletAddress || defaultAddress;
+  const shortAddress = `${displayAddress.slice(0, 6)}...${displayAddress.slice(-4)}`;
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
   const handleCopyAddress = () => {
-    navigator.clipboard.writeText(walletAddress);
+    navigator.clipboard.writeText(displayAddress);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
@@ -32,6 +43,11 @@ const WalletOverview: React.FC = () => {
             >
               {isCopied ? <Check className="h-4 w-4 text-wallet-accent" /> : <Copy className="h-4 w-4" />}
             </button>
+            {walletType && (
+              <span className="ml-2 text-xs bg-white/10 px-2 py-0.5 rounded-full">
+                {walletType}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex space-x-2 mt-4 md:mt-0">
