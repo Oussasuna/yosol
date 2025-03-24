@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import WalletOverview from '../components/WalletOverview';
@@ -21,7 +22,9 @@ const Dashboard = () => {
   const [connectedWalletType, setConnectedWalletType] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   
+  // This effect generates a random wallet address when connecting
   useEffect(() => {
     if (walletConnected && !walletAddress) {
       const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -88,21 +91,35 @@ const Dashboard = () => {
   };
 
   const connectWallet = (walletType: string) => {
+    // Don't try to connect if already connecting
+    if (isConnecting) return;
+    
+    setIsConnecting(true);
+    
     toast({
       title: `Connecting ${walletType}`,
       description: `Connecting to your Solana wallet via ${walletType}...`,
       variant: "default"
     });
 
+    // Check if the requested wallet is available in the window object
+    const hasWallet = typeof window !== 'undefined' && 
+                     window.hasOwnProperty(walletType.toLowerCase());
+    
+    console.log(`Attempting to connect to ${walletType}. Available in window:`, hasWallet);
+
+    // Simulate connection with timeout
     setTimeout(() => {
       setWalletConnected(true);
       setConnectedWalletType(walletType);
+      setIsConnecting(false);
+      
       toast({
         title: "Wallet Connected",
         description: `Your ${walletType} wallet has been successfully connected.`,
         variant: "default"
       });
-    }, 1000);
+    }, 1500);
   };
 
   const disconnectWallet = () => {
@@ -175,6 +192,23 @@ const Dashboard = () => {
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
 
+  const handleSend = () => {
+    toast({
+      title: "Send Transaction",
+      description: "Please complete the form to send SOL or tokens to another wallet.",
+    });
+  };
+
+  const handleReceive = () => {
+    if (walletAddress) {
+      navigator.clipboard.writeText(walletAddress);
+      toast({
+        title: "Receive Address Ready",
+        description: "Your wallet address has been copied. Share it to receive SOL or tokens.",
+      });
+    }
+  };
+
   return <Layout>
       <div className="container px-4 md:px-6 py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
@@ -183,8 +217,13 @@ const Dashboard = () => {
           {!walletConnected ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90 transition-opacity duration-300 gap-2">
-                  <Wallet className="h-4 w-4" /> Connect Wallet <ChevronDown className="h-3 w-3 ml-1" />
+                <Button 
+                  className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90 transition-opacity duration-300 gap-2"
+                  disabled={isConnecting}
+                >
+                  <Wallet className="h-4 w-4" /> 
+                  {isConnecting ? 'Connecting...' : 'Connect Wallet'} 
+                  <ChevronDown className="h-3 w-3 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-background/95 backdrop-blur-sm border-solana/20">
@@ -242,7 +281,13 @@ const Dashboard = () => {
         
         <div className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2">
-            <WalletOverview walletConnected={walletConnected} walletAddress={walletAddress} walletType={connectedWalletType} />
+            <WalletOverview 
+              walletConnected={walletConnected} 
+              walletAddress={walletAddress} 
+              walletType={connectedWalletType}
+              onSend={handleSend}
+              onReceive={handleReceive}
+            />
           </div>
           <div>
             <VoiceInterface onCommand={handleVoiceCommand} />
@@ -262,4 +307,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

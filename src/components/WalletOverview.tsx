@@ -2,17 +2,24 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowUp, ArrowDown, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
 
 interface WalletOverviewProps {
   walletConnected?: boolean;
   walletAddress?: string | null;
   walletType?: string | null;
+  balance?: number;
+  onSend?: () => void;
+  onReceive?: () => void;
 }
 
 const WalletOverview: React.FC<WalletOverviewProps> = ({ 
   walletConnected = false, 
   walletAddress = null,
-  walletType = null
+  walletType = null,
+  balance = 243.75,
+  onSend,
+  onReceive
 }) => {
   const [isCopied, setIsCopied] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -28,7 +35,46 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     navigator.clipboard.writeText(displayAddress);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
+    toast({
+      title: "Address Copied",
+      description: "Wallet address copied to clipboard.",
+    });
   };
+
+  const handleSend = () => {
+    if (onSend) {
+      onSend();
+    } else {
+      toast({
+        title: "Send Request",
+        description: "Send functionality is being implemented.",
+      });
+    }
+  };
+
+  const handleReceive = () => {
+    if (onReceive) {
+      onReceive();
+    } else {
+      toast({
+        title: "Receive Request",
+        description: "Receive functionality is being implemented.",
+      });
+    }
+  };
+
+  if (!walletConnected) {
+    return (
+      <div className={`glass-card p-6 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+        <div className="flex flex-col items-center justify-center py-8">
+          <h2 className="text-2xl font-semibold mb-4">Wallet Not Connected</h2>
+          <p className="text-center text-muted-foreground mb-6">
+            Connect your Solana wallet to view your balance and transactions.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`glass-card p-6 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
@@ -51,10 +97,20 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           </div>
         </div>
         <div className="flex space-x-2 mt-4 md:mt-0">
-          <Button variant="outline" size="sm" className="flex items-center gap-1 bg-white/5 hover:bg-white/10">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1 bg-white/5 hover:bg-white/10"
+            onClick={handleReceive}
+          >
             <ArrowDown className="h-4 w-4 text-wallet-accent" /> Receive
           </Button>
-          <Button variant="outline" size="sm" className="flex items-center gap-1 bg-white/5 hover:bg-white/10">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1 bg-white/5 hover:bg-white/10"
+            onClick={handleSend}
+          >
             <ArrowUp className="h-4 w-4 text-solana" /> Send
           </Button>
         </div>
@@ -62,10 +118,10 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
       <div className="mb-6">
         <div className="flex items-baseline mb-1">
-          <h3 className="text-3xl font-bold">243.75 SOL</h3>
+          <h3 className="text-3xl font-bold">{balance.toFixed(2)} SOL</h3>
           <span className="ml-2 text-sm px-2 py-0.5 rounded-full bg-wallet-accent/20 text-wallet-accent">+12.5%</span>
         </div>
-        <p className="text-sm text-muted-foreground">≈ 24,375.00 USD</p>
+        <p className="text-sm text-muted-foreground">≈ {(balance * 100).toFixed(2)} USD</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

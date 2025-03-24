@@ -12,6 +12,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   const [command, setCommand] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [isBrowserSupported, setIsBrowserSupported] = useState(true);
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<number | null>(null);
@@ -59,19 +60,27 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
             description: "Please allow microphone access to use voice commands",
             variant: "destructive"
           });
+        } else {
+          // Fall back to simulation if there's an error
+          simulateVoiceRecognition();
         }
       };
     } else {
+      setIsBrowserSupported(false);
       toast({
-        title: "Voice Commands Unavailable",
-        description: "Your browser doesn't support speech recognition",
-        variant: "destructive"
+        title: "Voice Commands Limited",
+        description: "Your browser doesn't fully support speech recognition. Using simulation mode.",
+        variant: "default"
       });
     }
     
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.abort();
+        try {
+          recognitionRef.current.abort();
+        } catch (e) {
+          console.error("Error stopping recognition:", e);
+        }
       }
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -89,7 +98,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   }, [command, onCommand]);
 
   const handleStartListening = () => {
-    if (!recognitionRef.current) {
+    if (!recognitionRef.current || !isBrowserSupported) {
       // Fallback for browsers without speech recognition
       simulateVoiceRecognition();
       return;
@@ -97,15 +106,29 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
     
     try {
       recognitionRef.current.start();
+      console.log("Voice recognition started");
     } catch (error) {
-      console.error('Recognition already started', error);
-      recognitionRef.current.stop();
+      console.error('Recognition start error:', error);
+      try {
+        recognitionRef.current.stop();
+        setTimeout(() => {
+          recognitionRef.current?.start();
+        }, 100);
+      } catch (stopError) {
+        console.error('Could not restart recognition:', stopError);
+        simulateVoiceRecognition();
+      }
     }
   };
 
   const handleStopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
+    if (recognitionRef.current && isBrowserSupported) {
+      try {
+        recognitionRef.current.stop();
+        console.log("Voice recognition stopped");
+      } catch (error) {
+        console.error('Recognition stop error:', error);
+      }
     } else {
       setIsListening(false);
       setIsAnimating(false);
@@ -117,6 +140,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
 
   // Fallback for browsers without speech recognition
   const simulateVoiceRecognition = () => {
+    console.log("Using simulated voice recognition");
     setIsListening(true);
     setIsAnimating(true);
     setCommand('Listening...');
@@ -174,6 +198,24 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
     }, 800);
   };
 
+  const triggerTestCommand = () => {
+    const testCommands = [
+      "Check my SOL balance",
+      "Show me the latest market trends",
+      "What are my staking rewards?",
+      "Connect my wallet"
+    ];
+    
+    const randomCommand = testCommands[Math.floor(Math.random() * testCommands.length)];
+    setCommand(randomCommand);
+    
+    if (onCommand) {
+      setTimeout(() => {
+        onCommand(randomCommand);
+      }, 500);
+    }
+  };
+
   return (
     <div className="glass-card p-6 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
@@ -188,7 +230,11 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       </div>
       
       <div className="text-center mb-4">
-        <p className="text-sm text-muted-foreground">Press and hold to speak a command</p>
+        <p className="text-sm text-muted-foreground">
+          {isBrowserSupported 
+            ? "Press and hold to speak a command" 
+            : "Press and hold to simulate a voice command"}
+        </p>
       </div>
       
       <div className="flex justify-center mb-6">
@@ -239,7 +285,15 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       )}
 
       <div className="mt-6 text-center">
-        <p className="text-xs text-muted-foreground">Try: "Send SOL", "Check price", "Stake tokens", "Set alert"</p>
+        <p className="text-xs text-muted-foreground mb-2">Try: "Send SOL", "Check price", "Stake tokens", "Set alert"</p>
+        {!isBrowserSupported && (
+          <button 
+            onClick={triggerTestCommand}
+            className="text-xs text-solana hover:underline mt-2"
+          >
+            Try a test command
+          </button>
+        )}
       </div>
     </div>
   );
