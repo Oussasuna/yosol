@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Wallet, ArrowRight, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +9,7 @@ const NavBar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,6 +22,25 @@ const NavBar: React.FC = () => {
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const handleNavLinkClick = (path: string, e: React.MouseEvent) => {
+    if (path === '/') {
+      // For home link, navigate to home and scroll to top
+      e.preventDefault();
+      if (location.pathname === '/') {
+        // If we're already on home page, just scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // If on another page, navigate to home
+        navigate('/');
+        // Scroll to top after navigation
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
+      }
+    }
+    // All other links use their default behavior
   };
 
   return (
@@ -37,7 +57,7 @@ const NavBar: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Link to="/" className="flex items-center space-x-2 group">
+            <Link to="/" className="flex items-center space-x-2 group" onClick={(e) => handleNavLinkClick('/', e)}>
               <motion.div
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.7, ease: "easeInOut" }}
@@ -70,6 +90,7 @@ const NavBar: React.FC = () => {
                 <Link 
                   to={item.path} 
                   className={`nav-link ${location.pathname === item.path ? 'text-foreground after:scale-x-100' : ''}`}
+                  onClick={(e) => item.path === '/' ? handleNavLinkClick('/', e) : undefined}
                 >
                   {item.label}
                 </Link>
@@ -134,7 +155,12 @@ const NavBar: React.FC = () => {
                   <Link 
                     to={item.path} 
                     className={`text-lg font-medium ${location.pathname === item.path ? 'text-solana' : 'text-foreground'}`}
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={(e) => {
+                      setMobileMenuOpen(false);
+                      if (item.path === '/') {
+                        handleNavLinkClick('/', e);
+                      }
+                    }}
                   >
                     {item.label}
                   </Link>

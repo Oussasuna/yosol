@@ -14,11 +14,14 @@ const SectionRedirect = () => {
       
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        // If the section doesn't exist, navigate to the home page
+        navigate('/');
       }
     }, 100);
     
     return () => clearTimeout(timer);
-  }, [location]);
+  }, [location, navigate]);
   
   return <Index />;
 };
