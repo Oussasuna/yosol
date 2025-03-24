@@ -1,176 +1,169 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Wallet, ArrowRight, Menu, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X, Wallet, BookOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
-const NavBar: React.FC = () => {
+const NavBar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const location = useLocation();
-
+  
+  // Check scroll position to change navbar style
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      if (window.scrollY > 10) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
     };
-
+    
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
-  // Helper function to scroll to section
-  const scrollToSection = (id: string) => {
-    setMobileMenuOpen(false);
-    if (location.pathname !== '/') {
-      // Navigate to home and then scroll after render
-      return;
-    }
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
   return (
-    <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled ? 'bg-black/60 backdrop-blur-xl shadow-lg' : 'bg-transparent'
+    <header
+      className={`sticky top-0 w-full z-50 transition-all duration-300 ${
+        isScrolled 
+          ? 'py-4 bg-background/80 backdrop-blur-md border-b border-white/5 shadow-lg'
+          : 'py-6 bg-transparent'
       }`}
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <motion.div 
-            className="flex items-center"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
+      <div className="container px-4 md:px-6 mx-auto">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link 
+            to="/" 
+            className="flex items-center space-x-2"
           >
-            <Link to="/" className="flex items-center space-x-2 group">
-              <motion.div
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.7, ease: "easeInOut" }}
-              >
-                <Wallet className="h-8 w-8 text-solana group-hover:text-wallet-accent transition-colors duration-300" />
-              </motion.div>
-              <motion.span 
-                className="text-2xl font-semibold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-solana to-wallet-accent"
-                whileHover={{ scale: 1.05 }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              >
-                yosol
-              </motion.span>
-            </Link>
-          </motion.div>
+            <Wallet className="h-6 w-6 text-solana" />
+            <span className="font-semibold text-xl bg-clip-text text-transparent bg-gradient-to-r from-solana to-wallet-accent">
+              yosol
+            </span>
+          </Link>
           
-          <nav className="hidden md:flex items-center space-x-8">
-            {[
-              { path: '/', label: 'Home' },
-              { path: '/dashboard', label: 'Dashboard' },
-              { path: '#features', label: 'Features', onClick: () => scrollToSection('features') },
-              { path: '#roadmap', label: 'Roadmap', onClick: () => scrollToSection('roadmap') }
-            ].map((item, index) => (
-              <motion.div
-                key={item.path}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 * index }}
-              >
-                {item.onClick ? (
-                  <button
-                    onClick={item.onClick}
-                    className={`nav-link ${location.pathname === item.path ? 'text-foreground after:scale-x-100' : ''}`}
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-1">
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <a 
+                    href="#features" 
+                    className={navigationMenuTriggerStyle()}
                   >
-                    {item.label}
-                  </button>
-                ) : (
-                  <Link 
-                    to={item.path} 
-                    className={`nav-link ${location.pathname === item.path ? 'text-foreground after:scale-x-100' : ''}`}
+                    Features
+                  </a>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <a 
+                    href="#roadmap" 
+                    className={navigationMenuTriggerStyle()}
                   >
-                    {item.label}
+                    Roadmap
+                  </a>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <a 
+                    href="#docs" 
+                    className={navigationMenuTriggerStyle()}
+                  >
+                    Learn More
+                  </a>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link to="/dashboard" className={navigationMenuTriggerStyle()}>
+                    Dashboard
                   </Link>
-                )}
-              </motion.div>
-            ))}
-          </nav>
-          
-          <motion.div 
-            className="flex items-center space-x-4"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Link to="/dashboard">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button size="sm" className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90 transition-opacity duration-300 gap-2 group">
-                  Launch App <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                </Button>
-              </motion.div>
-            </Link>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
             
-            <div className="md:hidden">
+            <div className="flex items-center space-x-4 ml-4">
               <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={toggleMobileMenu}
-                className="text-foreground"
+                variant="outline" 
+                className="hidden lg:flex"
               >
-                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                <BookOpen className="mr-2 h-4 w-4" />
+                Docs
+              </Button>
+              <Button className="bg-gradient-to-r from-solana to-wallet-accent hover:from-solana-dark hover:to-solana text-white">
+                <Wallet className="mr-2 h-4 w-4" />
+                Connect Wallet
               </Button>
             </div>
-          </motion.div>
+          </nav>
+          
+          {/* Mobile Menu Trigger */}
+          <button 
+            className="md:hidden p-2 rounded-md hover:bg-white/5"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
       </div>
       
       {/* Mobile Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div 
-            className="md:hidden fixed inset-0 top-16 z-40 glass-card"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+          <motion.div
+            className="md:hidden absolute top-full left-0 right-0 bg-background/95 backdrop-blur-lg border-b border-white/5"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="p-6 flex flex-col space-y-4">
-              {[
-                { path: '/', label: 'Home' },
-                { path: '/dashboard', label: 'Dashboard' },
-                { path: '#features', label: 'Features', onClick: () => scrollToSection('features') },
-                { path: '#roadmap', label: 'Roadmap', onClick: () => scrollToSection('roadmap') }
-              ].map((item, index) => (
-                <motion.div
-                  key={item.path}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.05 * index }}
+            <div className="container px-4 py-4 flex flex-col space-y-4">
+              <a 
+                href="#features" 
+                className="py-2 hover:text-solana transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Features
+              </a>
+              <a 
+                href="#roadmap" 
+                className="py-2 hover:text-solana transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Roadmap
+              </a>
+              <a 
+                href="#docs" 
+                className="py-2 hover:text-solana transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Learn More
+              </a>
+              <Link 
+                to="/dashboard" 
+                className="py-2 hover:text-solana transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+              <div className="pt-4 border-t border-white/10">
+                <Button 
+                  className="w-full bg-gradient-to-r from-solana to-wallet-accent hover:from-solana-dark hover:to-solana text-white"
                 >
-                  {item.onClick ? (
-                    <button
-                      onClick={item.onClick}
-                      className={`text-lg font-medium ${location.pathname === item.path ? 'text-solana' : 'text-foreground'}`}
-                    >
-                      {item.label}
-                    </button>
-                  ) : (
-                    <Link 
-                      to={item.path} 
-                      className={`text-lg font-medium ${location.pathname === item.path ? 'text-solana' : 'text-foreground'}`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  )}
-                </motion.div>
-              ))}
+                  <Wallet className="mr-2 h-4 w-4" />
+                  Connect Wallet
+                </Button>
+              </div>
             </div>
           </motion.div>
         )}

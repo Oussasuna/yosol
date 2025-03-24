@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import HeroSection from '../components/HeroSection';
 import FeatureCard from '../components/FeatureCard';
 import Roadmap from '../components/Roadmap';
+import DocsSection from '../components/DocsSection';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, Shield, TrendingUp, Wallet, ArrowRight, Zap, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -132,6 +133,9 @@ const Index = () => {
       
       {/* Roadmap Section */}
       <Roadmap />
+      
+      {/* Documentation Section */}
+      <DocsSection />
       
       {/* Testimonials Carousel Section */}
       <section className="py-20 relative overflow-hidden">
