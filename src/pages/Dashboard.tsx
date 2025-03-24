@@ -72,7 +72,7 @@ const Dashboard = () => {
   return <Layout>
       <div className="container px-4 md:px-6 py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <h1 className="text-3xl font-bold animate-fade-in text-left my-[27px]">Dashboard</h1>
+          <h1 className="text-3xl font-bold animate-fade-in text-left my-[36px] py-0 px-[7px] mx-[3px]">Dashboard</h1>
           
           {!walletConnected ? <Button onClick={connectWallet} className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90 transition-opacity duration-300 gap-2">
               <Wallet className="h-4 w-4" /> Connect Wallet
