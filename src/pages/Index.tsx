@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import Layout from '../components/Layout';
 import HeroSection from '../components/HeroSection';
 import FeatureCard from '../components/FeatureCard';
+import Roadmap from '../components/Roadmap'; // Import the Roadmap component
 import { Button } from '@/components/ui/button';
 import { MessageCircle, Shield, TrendingUp, Wallet, ArrowRight, Zap, Cloud } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -128,6 +129,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+      
+      {/* Roadmap Section */}
+      <Roadmap />
       
       {/* Testimonials Carousel Section */}
       <section className="py-20 relative overflow-hidden">
