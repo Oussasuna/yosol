@@ -3,9 +3,9 @@ import React, { useEffect, useRef } from 'react';
 import Layout from '../components/Layout';
 import HeroSection from '../components/HeroSection';
 import FeatureCard from '../components/FeatureCard';
-import Roadmap from '../components/Roadmap';
+import Roadmap from '../components/Roadmap'; // Import the Roadmap component
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Shield, TrendingUp, Wallet, ArrowRight, Zap, Bell } from 'lucide-react';
+import { MessageCircle, Shield, TrendingUp, Wallet, ArrowRight, Zap, Cloud } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
@@ -86,43 +86,43 @@ const Index = () => {
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             <FeatureCard 
               icon={MessageCircle}
-              title="Talk to Your Wallet"
-              description="Send crypto, check prices, and trade just by speaking. Control your wallet with natural voice commands for a hands-free experience."
+              title="Voice Commands"
+              description="Control your wallet with natural voice commands. Send, receive, and manage your assets hands-free."
               color="text-solana"
               delay={0}
             />
             <FeatureCard 
               icon={Shield}
-              title="AI Safety Check"
-              description="Warns you before risky transactions or scams. Intelligent transaction monitoring flags suspicious activity before you confirm."
+              title="AI Security"
+              description="Intelligent transaction monitoring flags suspicious activity before you confirm."
               color="text-wallet-accent"
               delay={1}
             />
             <FeatureCard 
               icon={TrendingUp}
               title="Market Insights"
-              description="Get real-time market analysis and personalized investment suggestions to make better trading decisions."
+              description="Get real-time market analysis and personalized investment suggestions."
               color="text-solana"
               delay={2}
             />
             <FeatureCard 
               icon={Wallet}
-              title="Auto Money Grow"
-              description="Stakes, swaps, and invests for you with voice commands. AI-powered portfolio management that optimizes your assets automatically."
+              title="Smart Portfolio"
+              description="AI-powered portfolio management that optimizes your assets automatically."
               color="text-wallet-accent"
               delay={3}
             />
             <FeatureCard 
               icon={Zap}
               title="Intelligent Permissions"
-              description="Set custom rules for your AI assistant to manage assets within your comfort level for security and peace of mind."
+              description="Set custom rules for your AI assistant to manage assets within your comfort level."
               color="text-solana"
               delay={4}
             />
             <FeatureCard 
-              icon={Bell}
-              title="Crypto Alarm"
-              description="Alerts you when prices hit your target or something fishy happens. Stay informed about important events affecting your portfolio."
+              icon={Cloud}
+              title="Conversational AI"
+              description="Ask questions about your finances, set goals, and get personalized advice."
               color="text-wallet-accent"
               delay={5}
             />
