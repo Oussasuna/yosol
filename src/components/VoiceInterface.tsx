@@ -1,5 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Mic, MicOff, Volume, VolumeX } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 interface VoiceInterfaceProps {
   onCommand?: (command: string) => void;
@@ -9,13 +11,118 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   const [isListening, setIsListening] = useState(false);
   const [command, setCommand] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const timeoutRef = useRef<number | null>(null);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'en-US';
+      
+      recognitionRef.current.onstart = () => {
+        setIsListening(true);
+        setIsAnimating(true);
+        setCommand('Listening...');
+      };
+      
+      recognitionRef.current.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join('');
+        
+        setCommand(transcript);
+      };
+      
+      recognitionRef.current.onend = () => {
+        if (command && command !== 'Listening...' && onCommand) {
+          onCommand(command);
+        }
+        setIsListening(false);
+        setIsAnimating(false);
+      };
+      
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+        setIsAnimating(false);
+        
+        if (event.error === 'not-allowed') {
+          toast({
+            title: "Microphone Access Denied",
+            description: "Please allow microphone access to use voice commands",
+            variant: "destructive"
+          });
+        }
+      };
+    } else {
+      toast({
+        title: "Voice Commands Unavailable",
+        description: "Your browser doesn't support speech recognition",
+        variant: "destructive"
+      });
+    }
+    
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Send final command when needed
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [command, onCommand]);
 
   const handleStartListening = () => {
+    if (!recognitionRef.current) {
+      // Fallback for browsers without speech recognition
+      simulateVoiceRecognition();
+      return;
+    }
+    
+    try {
+      recognitionRef.current.start();
+    } catch (error) {
+      console.error('Recognition already started', error);
+      recognitionRef.current.stop();
+    }
+  };
+
+  const handleStopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    } else {
+      setIsListening(false);
+      setIsAnimating(false);
+      if (command && command !== 'Listening...' && onCommand) {
+        onCommand(command);
+      }
+    }
+  };
+
+  // Fallback for browsers without speech recognition
+  const simulateVoiceRecognition = () => {
     setIsListening(true);
     setIsAnimating(true);
-    // Simulating voice recognition start
-    setTimeout(() => {
-      // Randomize example commands to showcase different features
+    setCommand('Listening...');
+    
+    // Simulate delay for listening
+    timeoutRef.current = window.setTimeout(() => {
       const exampleCommands = [
         'Send 5 SOL to wallet ending in 7X4F...',
         'Check current SOL price',
@@ -24,16 +131,26 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       ];
       const randomCommand = exampleCommands[Math.floor(Math.random() * exampleCommands.length)];
       setCommand(randomCommand);
-      // In a real implementation, we would connect to the device's microphone
+      
+      // Simulate processing delay
+      timeoutRef.current = window.setTimeout(() => {
+        setIsListening(false);
+        setIsAnimating(false);
+        if (onCommand) {
+          onCommand(randomCommand);
+        }
+      }, 1000);
     }, 1500);
   };
 
-  const handleStopListening = () => {
-    setIsListening(false);
-    setIsAnimating(false);
-    if (command && onCommand) {
-      onCommand(command);
-    }
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    
+    toast({
+      title: isMuted ? "Audio Enabled" : "Audio Muted",
+      description: isMuted ? "Voice responses are now enabled" : "Voice responses are now muted",
+      variant: "default"
+    });
   };
 
   const handleRippleEffect = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -59,8 +176,18 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
 
   return (
     <div className="glass-card p-6 animate-fade-in">
-      <div className="text-center mb-6">
-        <h3 className="text-xl font-medium mb-2">Voice Assistant</h3>
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xl font-medium">Voice Assistant</h3>
+        <button
+          onClick={toggleMute}
+          className="p-2 rounded-full hover:bg-white/10 transition-colors"
+          aria-label={isMuted ? "Unmute" : "Mute"}
+        >
+          {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume className="h-5 w-5" />}
+        </button>
+      </div>
+      
+      <div className="text-center mb-4">
         <p className="text-sm text-muted-foreground">Press and hold to speak a command</p>
       </div>
       
@@ -77,6 +204,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
             onTouchStart={handleStartListening}
             onTouchEnd={handleStopListening}
             onClick={handleRippleEffect}
+            aria-label={isListening ? "Stop listening" : "Start listening"}
           >
             <div className="absolute inset-0 rounded-full overflow-hidden">
               {isAnimating && (
@@ -94,12 +222,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
                   <div className="voice-wave voice-wave-5"></div>
                 </>
               ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 15.5C14.21 15.5 16 13.71 16 11.5V6C16 3.79 14.21 2 12 2C9.79 2 8 3.79 8 6V11.5C8 13.71 9.79 15.5 12 15.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M4.34998 9.65002V11.35C4.34998 15.57 7.77998 19 12 19C16.22 19 19.65 15.57 19.65 11.35V9.65002" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 19V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M8 22H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />
               )}
             </div>
           </button>
@@ -107,9 +230,11 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       </div>
       
       {command && (
-        <div className="bg-white/5 p-4 rounded-lg animate-fade-in">
-          <p className="text-sm text-muted-foreground mb-1">Recognized command:</p>
-          <p className="text-white">{command}</p>
+        <div className={`bg-white/5 p-4 rounded-lg animate-fade-in transition-opacity duration-300 ${command === 'Listening...' ? 'opacity-70' : 'opacity-100'}`}>
+          <p className="text-sm text-muted-foreground mb-1">
+            {command === 'Listening...' ? 'Listening...' : 'Recognized command:'}
+          </p>
+          <p className="text-white">{command === 'Listening...' ? '' : command}</p>
         </div>
       )}
 
