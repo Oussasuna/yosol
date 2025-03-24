@@ -6,9 +6,12 @@ import TransactionHistory from '../components/TransactionHistory';
 import VoiceInterface from '../components/VoiceInterface';
 import AIAssistant from '../components/AIAssistant';
 import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { Wallet } from 'lucide-react';
 
 const Dashboard = () => {
   const [lastCommand, setLastCommand] = useState<string | null>(null);
+  const [walletConnected, setWalletConnected] = useState(false);
   
   const handleVoiceCommand = (command: string) => {
     setLastCommand(command);
@@ -41,6 +44,25 @@ const Dashboard = () => {
     }
   };
 
+  const connectWallet = () => {
+    // Simulate wallet connection
+    toast({
+      title: "Connecting Wallet",
+      description: "Connecting to your Solana wallet...",
+      variant: "default",
+    });
+    
+    // Simulate connection delay
+    setTimeout(() => {
+      setWalletConnected(true);
+      toast({
+        title: "Wallet Connected",
+        description: "Your wallet has been successfully connected.",
+        variant: "default",
+      });
+    }, 1000);
+  };
+
   useEffect(() => {
     // Welcome toast on first load
     const timer = setTimeout(() => {
@@ -57,7 +79,26 @@ const Dashboard = () => {
   return (
     <Layout>
       <div className="container px-4 md:px-6 py-8">
-        <h1 className="text-3xl font-bold mb-8 animate-fade-in">Dashboard</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold animate-fade-in">Dashboard</h1>
+          
+          {!walletConnected ? (
+            <Button 
+              onClick={connectWallet} 
+              className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90 transition-opacity duration-300 gap-2"
+            >
+              <Wallet className="h-4 w-4" /> Connect Wallet
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              className="border-solana text-solana hover:bg-solana/10"
+            >
+              <Wallet className="h-4 w-4 mr-2" /> 
+              7X4F...8dj2
+            </Button>
+          )}
+        </div>
         
         <div className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2">
