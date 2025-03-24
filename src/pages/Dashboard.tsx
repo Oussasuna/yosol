@@ -23,17 +23,6 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 
-const walletIcons = {
-  "Phantom": "https://phantom.app/img/phantom-logo.svg",
-  "Solflare": "https://solflare.com/assets/logo-icon.svg",
-  "Magic Eden": "https://magiceden.io/img/logo.png",
-  "OKX Wallet": "https://static.okx.com/cdn/assets/imgs/223/B9BD95EF6DBF9023.png",
-  "Backpack": "https://backpack.app/logo.svg",
-  "Torus": "https://tor.us/images/torus-logo-blue.svg",
-  "MathWallet": "https://mathwallet.org/icon/mw.png",
-  "Coinbase Wallet": "https://static.coinbase.com/wallet-assets/assets/CBW.svg"
-};
-
 const Dashboard = () => {
   const [lastCommand, setLastCommand] = useState<string | null>(null);
   const [walletConnected, setWalletConnected] = useState(false);
@@ -116,9 +105,13 @@ const Dashboard = () => {
     toast({
       title: `Connecting ${walletType}`,
       description: `Connecting to your Solana wallet via ${walletType}...`,
+      variant: "default"
     });
 
-    console.log(`Attempting to connect to ${walletType} wallet`);
+    const hasWallet = typeof window !== 'undefined' && 
+                     window.hasOwnProperty(walletType.toLowerCase());
+    
+    console.log(`Attempting to connect to ${walletType}. Available in window:`, hasWallet);
 
     setTimeout(() => {
       setWalletConnected(true);
@@ -129,6 +122,7 @@ const Dashboard = () => {
       toast({
         title: "Wallet Connected",
         description: `Your ${walletType} wallet has been successfully connected.`,
+        variant: "default"
       });
     }, 1500);
   };
@@ -180,7 +174,26 @@ const Dashboard = () => {
   }, []);
 
   const getWalletIcon = (type: string) => {
-    return walletIcons[type as keyof typeof walletIcons] || "";
+    switch (type) {
+      case "Phantom":
+        return "https://phantom.app/favicon.ico";
+      case "Solflare":
+        return "https://solflare.com/favicon.ico";
+      case "Magic Eden":
+        return "https://magiceden.io/favicon.ico";
+      case "OKX Wallet":
+        return "https://www.okx.com/favicon.ico";
+      case "Backpack":
+        return "https://www.backpack.app/favicon.ico";
+      case "Torus":
+        return "https://tor.us/favicon.ico";
+      case "MathWallet":
+        return "https://mathwallet.org/favicon.ico";
+      case "Coinbase Wallet":
+        return "https://www.coinbase.com/favicon.ico";
+      default:
+        return "";
+    }
   };
 
   const shortenAddress = (address: string | null) => {
@@ -227,13 +240,12 @@ const Dashboard = () => {
                 <Button 
                   className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90 transition-opacity duration-300 gap-2"
                   disabled={isConnecting}
-                  onClick={() => setShowWalletDialog(true)}
                 >
                   <Wallet className="h-4 w-4" /> 
                   {isConnecting ? 'Connecting...' : 'Connect Wallet'}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="p-0 border-0 rounded-lg overflow-hidden bg-[#0e0e12] text-white shadow-2xl max-w-xs w-full">
+              <DialogContent className="p-0 border-0 rounded-lg overflow-hidden bg-transparent shadow-2xl max-w-xs w-full">
                 <div className="bg-[#0e0e12] text-white p-5 relative">
                   <DialogHeader className="pb-4">
                     <DialogTitle className="text-center text-xl font-medium">Connect a wallet on Solana to continue</DialogTitle>
@@ -242,7 +254,7 @@ const Dashboard = () => {
                     <X className="h-4 w-4" />
                   </DialogClose>
                 </div>
-                <div className="bg-gradient-to-b from-[#5846f9]/20 to-[#1de9b6]/20">
+                <div className="bg-gradient-to-b from-[#5846f9]/20 to-[#1de9b6]/20 backdrop-blur-sm">
                   {walletOptions.map((wallet, index) => (
                     <div 
                       key={wallet.name}
@@ -250,14 +262,7 @@ const Dashboard = () => {
                       className="flex items-center justify-between p-4 hover:bg-white/10 transition-colors cursor-pointer border-t border-white/10 first:border-t-0"
                     >
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={getWalletIcon(wallet.name)} 
-                          alt={wallet.name} 
-                          className="h-6 w-6 rounded-full bg-white/10 p-1"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://placehold.co/24x24?text=W';
-                          }} 
-                        />
+                        <img src={getWalletIcon(wallet.name)} alt={wallet.name} className="h-6 w-6 rounded-full" />
                         <span className="text-white font-medium">{wallet.name}</span>
                       </div>
                       {wallet.detected && <span className="text-[#1de9b6] text-sm">Detected</span>}
@@ -270,22 +275,13 @@ const Dashboard = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="border-solana text-solana hover:bg-solana/10 flex items-center gap-2">
-                  {connectedWalletType && (
-                    <img 
-                      src={getWalletIcon(connectedWalletType)} 
-                      alt={connectedWalletType} 
-                      className="h-4 w-4"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://placehold.co/16x16?text=W';
-                      }}
-                    />
-                  )}
+                  {connectedWalletType && <img src={getWalletIcon(connectedWalletType)} alt={connectedWalletType} className="h-4 w-4" />}
                   <Wallet className="h-4 w-4" /> 
                   <span className="hidden sm:inline">{connectedWalletType}:</span> {shortenAddress(walletAddress)}
                   <ChevronDown className="h-3 w-3 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-60 bg-[#0e0e12]/95 backdrop-blur-sm border-solana/20">
+              <DropdownMenuContent align="end" className="w-60 bg-background/95 backdrop-blur-sm border-solana/20">
                 <div className="px-3 py-2">
                   <p className="text-sm font-medium">{connectedWalletType} Wallet</p>
                   <p className="text-xs text-muted-foreground mt-1 truncate">{walletAddress}</p>
