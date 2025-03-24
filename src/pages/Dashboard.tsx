@@ -32,7 +32,6 @@ const Dashboard = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [showWalletDialog, setShowWalletDialog] = useState(false);
   
-  // This effect generates a random wallet address when connecting
   useEffect(() => {
     if (walletConnected && !walletAddress) {
       const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -99,7 +98,6 @@ const Dashboard = () => {
   };
 
   const connectWallet = (walletType: string) => {
-    // Don't try to connect if already connecting
     if (isConnecting) return;
     
     setIsConnecting(true);
@@ -110,13 +108,11 @@ const Dashboard = () => {
       variant: "default"
     });
 
-    // Check if the requested wallet is available in the window object
     const hasWallet = typeof window !== 'undefined' && 
                      window.hasOwnProperty(walletType.toLowerCase());
     
     console.log(`Attempting to connect to ${walletType}. Available in window:`, hasWallet);
 
-    // Simulate connection with timeout
     setTimeout(() => {
       setWalletConnected(true);
       setConnectedWalletType(walletType);
@@ -324,7 +320,7 @@ const Dashboard = () => {
         
         <div className="grid gap-6 md:grid-cols-3 mt-6">
           <div className="md:col-span-2">
-            <TransactionHistory />
+            <TransactionHistory walletConnected={walletConnected} />
           </div>
           <div>
             <AIAssistant />
