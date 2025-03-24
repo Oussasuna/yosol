@@ -2,49 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowUp, ArrowDown, Wallet, AlertCircle } from 'lucide-react';
 
-// Mock transactions for demo purposes
-const mockTransactions = [
-  {
-    id: 'tx1',
-    type: 'send',
-    amount: '5.2',
-    to: '89XLs...7X4F',
-    date: '2023-09-18T14:30:00Z',
-    status: 'completed'
-  },
-  {
-    id: 'tx2',
-    type: 'receive',
-    amount: '10.0',
-    from: 'Market...3F9D',
-    date: '2023-09-16T09:15:00Z',
-    status: 'completed'
-  },
-  {
-    id: 'tx3',
-    type: 'swap',
-    amount: '15.7',
-    token: 'USDC',
-    date: '2023-09-15T16:45:00Z',
-    status: 'completed'
-  },
-  {
-    id: 'tx4',
-    type: 'receive',
-    amount: '2.3',
-    from: 'Stake...P2F8',
-    date: '2023-09-12T11:20:00Z',
-    status: 'completed'
-  },
-  {
-    id: 'tx5',
-    type: 'send',
-    amount: '1.5',
-    to: 'NFT...4KLM',
-    date: '2023-09-10T08:55:00Z',
-    status: 'completed'
-  }
-];
+interface Transaction {
+  id: string;
+  type: 'send' | 'receive' | 'swap';
+  amount: string;
+  to?: string;
+  from?: string;
+  token?: string;
+  date: string;
+  status: 'completed' | 'pending' | 'failed';
+}
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -58,33 +25,79 @@ const formatDate = (dateString: string) => {
 
 interface TransactionHistoryProps {
   walletConnected?: boolean;
+  walletAddress?: string | null;
 }
 
-const TransactionHistory: React.FC<TransactionHistoryProps> = ({ walletConnected = false }) => {
+const TransactionHistory: React.FC<TransactionHistoryProps> = ({ 
+  walletConnected = false, 
+  walletAddress = null 
+}) => {
   const [animatedItems, setAnimatedItems] = useState<string[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (walletConnected) {
+    if (walletConnected && walletAddress) {
       setIsLoading(true);
-      // In a real-world scenario, we would fetch the transactions from a blockchain API
-      // For now, we'll simulate a loading state and then use our mock data
-      const timer = setTimeout(() => {
-        setTransactions(mockTransactions);
-        setIsLoading(false);
-        
-        // Animate items after they're loaded
-        const ids = mockTransactions.map(tx => tx.id);
-        setAnimatedItems(ids);
-      }, 1000);
-      return () => clearTimeout(timer);
+      
+      // In a real implementation, this would call a blockchain API with the wallet address
+      // For demonstration, we'll simulate fetching transactions based on the wallet address
+      const fetchTransactions = async () => {
+        try {
+          console.log(`Fetching transactions for wallet: ${walletAddress}`);
+          
+          // Simulate API call delay
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          // Generate some pseudo-random transactions based on the wallet address
+          // In a real app, this would be replaced with actual blockchain API calls
+          const lastDigit = walletAddress.slice(-1);
+          const transactionCount = (parseInt(lastDigit, 16) % 5) + 2; // 2-6 transactions
+          
+          const types = ['send', 'receive', 'swap'];
+          const newTransactions: Transaction[] = [];
+          
+          for (let i = 0; i < transactionCount; i++) {
+            const typeIndex = (parseInt(walletAddress.slice(i, i+2) || '0', 16) % 3);
+            const type = types[typeIndex] as 'send' | 'receive' | 'swap';
+            
+            const amount = ((parseInt(walletAddress.slice(i*2, i*2+2) || '10', 16) % 20) + 1).toFixed(2);
+            const daysAgo = (parseInt(walletAddress.slice(-i-2, -i) || '1', 16) % 10);
+            const date = new Date();
+            date.setDate(date.getDate() - daysAgo);
+            
+            newTransactions.push({
+              id: `tx-${walletAddress.slice(0, 6)}-${i}`,
+              type,
+              amount,
+              ...(type === 'send' ? { to: `${walletAddress.slice(0, 2)}...${walletAddress.slice(-4)}` } : {}),
+              ...(type === 'receive' ? { from: `${walletAddress.slice(-4, -2)}...${walletAddress.slice(2, 4)}` } : {}),
+              ...(type === 'swap' ? { token: 'USDC' } : {}),
+              date: date.toISOString(),
+              status: 'completed'
+            });
+          }
+          
+          setTransactions(newTransactions);
+          setIsLoading(false);
+          
+          // Animate items after they're loaded
+          const ids = newTransactions.map(tx => tx.id);
+          setAnimatedItems(ids);
+          
+        } catch (error) {
+          console.error("Error fetching transactions:", error);
+          setIsLoading(false);
+        }
+      };
+      
+      fetchTransactions();
     } else {
       // Reset transactions when wallet disconnects
       setTransactions([]);
       setAnimatedItems([]);
     }
-  }, [walletConnected]);
+  }, [walletConnected, walletAddress]);
 
   if (!walletConnected) {
     return (

@@ -46,15 +46,6 @@ const Dashboard = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [showWalletDialog, setShowWalletDialog] = useState(false);
   
-  // When wallet is connected, generate a consistent wallet address
-  useEffect(() => {
-    if (walletConnected && !walletAddress) {
-      // For demo purposes we're using a fixed address instead of a random one
-      // This ensures the same address is shown each time
-      setWalletAddress("DJkx7m12xUF4mXVfgP5yEFGwxYfFkXgYLANvuKtWg6w7");
-    }
-  }, [walletConnected, walletAddress]);
-
   const handleVoiceCommand = (command: string) => {
     setLastCommand(command);
     console.log("Voice command received:", command);
@@ -109,6 +100,19 @@ const Dashboard = () => {
     }
   };
 
+  const generateRandomWalletAddress = () => {
+    // Generate a random Solana wallet address (for demo purposes)
+    const characters = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    let result = '';
+    const length = 44; // Typical Solana address length is 44 chars
+    
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    
+    return result;
+  };
+
   const connectWallet = (walletType: string) => {
     if (isConnecting) return;
     
@@ -128,6 +132,10 @@ const Dashboard = () => {
     console.log(`Attempting to connect to ${walletType}. Available in window:`, hasWallet);
 
     setTimeout(() => {
+      const randomAddress = generateRandomWalletAddress();
+      console.log(`Connected to wallet with address: ${randomAddress}`);
+      
+      setWalletAddress(randomAddress);
       setWalletConnected(true);
       setConnectedWalletType(walletType);
       setIsConnecting(false);
@@ -334,7 +342,10 @@ const Dashboard = () => {
         
         <div className="grid gap-6 md:grid-cols-3 mt-6">
           <div className="md:col-span-2">
-            <TransactionHistory walletConnected={walletConnected} />
+            <TransactionHistory 
+              walletConnected={walletConnected} 
+              walletAddress={walletAddress}
+            />
           </div>
           <div>
             <AIAssistant />

@@ -23,9 +23,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 }) => {
   const [isCopied, setIsCopied] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const defaultAddress = 'DJkx7m12xUF4mXVfgP5yEFGwxYfFkXgYLANvuKtWg6w7';
-  const displayAddress = walletAddress || defaultAddress;
-  const shortAddress = `${displayAddress.slice(0, 6)}...${displayAddress.slice(-4)}`;
+  const shortAddress = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : '';
 
   useEffect(() => {
     setIsVisible(true);
@@ -33,13 +31,15 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   }, [walletAddress]);
 
   const handleCopyAddress = () => {
-    navigator.clipboard.writeText(displayAddress);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
-    toast({
-      title: "Address Copied",
-      description: "Wallet address copied to clipboard.",
-    });
+    if (walletAddress) {
+      navigator.clipboard.writeText(walletAddress);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+      toast({
+        title: "Address Copied",
+        description: "Wallet address copied to clipboard.",
+      });
+    }
   };
 
   const handleSend = () => {
