@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { MessageCircle, TrendingUp, Shield, Mic, Bot } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { MessageCircle, TrendingUp, Shield, Mic, Bot, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 
@@ -18,44 +18,85 @@ const AIAssistant: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [userInput, setUserInput] = useState('');
   const [processingQuery, setProcessingQuery] = useState(false);
+  const [insights, setInsights] = useState<AIInsight[]>([]);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Define insights with handlers
-  const insights: AIInsight[] = [
-    {
-      type: 'security',
-      icon: <Shield className="h-5 w-5 text-wallet-accent" />,
-      title: 'Security Alert',
-      description: 'Your last transaction was to a new address. Would you like to add it to your trusted list?',
-      action: 'Add to trusted',
-      actionHandler: () => handleAction('Added address to trusted list')
-    },
-    {
-      type: 'market',
-      icon: <TrendingUp className="h-5 w-5 text-solana" />,
-      title: 'Market Insight',
-      description: 'SOL is up 12.5% in the last 24 hours. This might be a good time to review your portfolio.',
-      action: 'View details',
-      actionHandler: () => handleAction('Opening market details')
-    },
-    {
-      type: 'suggestion',
-      icon: <MessageCircle className="h-5 w-5 text-white" />,
-      title: 'Voice Command Suggestion',
-      description: 'Try saying "Show me my staking rewards" to see your latest rewards.',
-      action: 'Try it now',
-      actionHandler: () => handleAction('Activated voice command')
-    }
-  ];
+  useEffect(() => {
+    const insightData: AIInsight[] = [
+      {
+        type: 'security',
+        icon: <Shield className="h-5 w-5 text-wallet-accent" />,
+        title: 'Security Alert',
+        description: 'Your last transaction was to a new address. Would you like to add it to your trusted list?',
+        action: 'Add to trusted',
+        actionHandler: () => handleAction('Added address to trusted list')
+      },
+      {
+        type: 'market',
+        icon: <TrendingUp className="h-5 w-5 text-solana" />,
+        title: 'Market Insight',
+        description: 'SOL is up 12.5% in the last 24 hours. This might be a good time to review your portfolio.',
+        action: 'View details',
+        actionHandler: () => handleAction('Opening market details')
+      },
+      {
+        type: 'suggestion',
+        icon: <MessageCircle className="h-5 w-5 text-white" />,
+        title: 'Voice Command Suggestion',
+        description: 'Try saying "Show me my staking rewards" to see your latest rewards.',
+        action: 'Try it now',
+        actionHandler: () => handleAction('Activated voice command')
+      },
+      {
+        type: 'security',
+        icon: <Zap className="h-5 w-5 text-yellow-400" />,
+        title: 'New Activity',
+        description: 'We detected a new NFT mint in your collection. Your wallet received a new asset.',
+        action: 'View NFT',
+        actionHandler: () => handleAction('Opening NFT details')
+      }
+    ];
+    
+    setInsights(insightData);
+  }, []);
 
   useEffect(() => {
     setIsVisible(true);
     
-    const interval = setInterval(() => {
+    // Only start interval if we have insights
+    if (insights.length > 0) {
+      startInsightRotation();
+    }
+    
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [insights]);
+  
+  const startInsightRotation = () => {
+    // Clear any existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    
+    // Set new interval
+    intervalRef.current = setInterval(() => {
       setActiveInsight((prev) => (prev + 1) % insights.length);
     }, 6000);
+  };
+  
+  const handleInsightClick = (index: number) => {
+    setActiveInsight(index);
     
-    return () => clearInterval(interval);
-  }, []);
+    // Reset the rotation timer when manually changing insights
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    startInsightRotation();
+  };
   
   const handleAction = (message: string) => {
     toast({
@@ -80,11 +121,13 @@ const AIAssistant: React.FC = () => {
     // Simulate response time
     setTimeout(() => {
       setProcessingQuery(false);
+      
+      const response = getAIResponse(userInput);
       setUserInput('');
       
       toast({
         title: "AI Response",
-        description: getAIResponse(userInput),
+        description: response,
       });
     }, 1500);
   };
@@ -100,6 +143,10 @@ const AIAssistant: React.FC = () => {
       return "You own 7 NFTs across 3 collections. The floor price of your collections has increased by 5% this week.";
     } else if (lowerQuery.includes('transaction') || lowerQuery.includes('history')) {
       return "You've made 143 transactions in total. Your most recent was a SOL transfer 2 days ago.";
+    } else if (lowerQuery.includes('wallet') || lowerQuery.includes('connect')) {
+      return "To connect your wallet, click the 'Connect Wallet' button at the top of the dashboard.";
+    } else if (lowerQuery.includes('token') || lowerQuery.includes('spl')) {
+      return "You have 5 SPL tokens in your wallet. The most valuable is worth approximately $120.";
     } else {
       return "I'm your Solana AI assistant. I can help with SOL prices, staking info, transaction history, and wallet management.";
     }
@@ -116,7 +163,8 @@ const AIAssistant: React.FC = () => {
               className={`w-2 h-2 rounded-full transition-all ${
                 index === activeInsight ? 'bg-solana' : 'bg-white/20'
               }`}
-              onClick={() => setActiveInsight(index)}
+              onClick={() => handleInsightClick(index)}
+              aria-label={`View insight ${index + 1}`}
             />
           ))}
         </div>
@@ -133,6 +181,7 @@ const AIAssistant: React.FC = () => {
                   ? 'opacity-0 -translate-x-full' 
                   : 'opacity-0 translate-x-full'
             }`}
+            aria-hidden={index !== activeInsight}
           >
             <div className="bg-white/5 p-4 rounded-lg">
               <div className="flex items-start gap-4">
