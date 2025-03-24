@@ -2,6 +2,7 @@
 import React from 'react';
 import NavBar from './NavBar';
 import { motion } from 'framer-motion';
+import { Wallet } from 'lucide-react'; // Import the Wallet icon from lucide-react
 
 interface LayoutProps {
   children: React.ReactNode;
