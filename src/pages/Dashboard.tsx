@@ -79,7 +79,7 @@ const Dashboard = () => {
   return (
     <Layout>
       <div className="container px-4 md:px-6 py-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <h1 className="text-3xl font-bold animate-fade-in">Dashboard</h1>
           
           {!walletConnected ? (
