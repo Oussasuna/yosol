@@ -29,7 +29,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
   useEffect(() => {
     setIsVisible(true);
-  }, []);
+    console.log("WalletOverview received address:", walletAddress);
+  }, [walletAddress]);
 
   const handleCopyAddress = () => {
     navigator.clipboard.writeText(displayAddress);

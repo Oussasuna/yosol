@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import WalletOverview from '../components/WalletOverview';
@@ -21,7 +22,20 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogClose,
+  DialogDescription,
 } from "@/components/ui/dialog";
+
+// Define wallet icons object for reliable access
+const walletIcons = {
+  "Phantom": "https://phantom.app/favicon.ico",
+  "Solflare": "https://solflare.com/favicon.ico",
+  "Magic Eden": "https://magiceden.io/favicon.ico",
+  "OKX Wallet": "https://www.okx.com/favicon.ico",
+  "Backpack": "https://www.backpack.app/favicon.ico",
+  "Torus": "https://tor.us/favicon.ico",
+  "MathWallet": "https://mathwallet.org/favicon.ico",
+  "Coinbase Wallet": "https://www.coinbase.com/favicon.ico",
+};
 
 const Dashboard = () => {
   const [lastCommand, setLastCommand] = useState<string | null>(null);
@@ -32,14 +46,12 @@ const Dashboard = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [showWalletDialog, setShowWalletDialog] = useState(false);
   
+  // When wallet is connected, generate a consistent wallet address
   useEffect(() => {
     if (walletConnected && !walletAddress) {
-      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let result = '';
-      for (let i = 0; i < 44; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-      }
-      setWalletAddress(result);
+      // For demo purposes we're using a fixed address instead of a random one
+      // This ensures the same address is shown each time
+      setWalletAddress("DJkx7m12xUF4mXVfgP5yEFGwxYfFkXgYLANvuKtWg6w7");
     }
   }, [walletConnected, walletAddress]);
 
@@ -108,8 +120,10 @@ const Dashboard = () => {
       variant: "default"
     });
 
+    // Check if wallet extension is available in window
+    const walletLowerCase = walletType.toLowerCase().replace(' ', '');
     const hasWallet = typeof window !== 'undefined' && 
-                     window.hasOwnProperty(walletType.toLowerCase());
+                     (window as any)[walletLowerCase];
     
     console.log(`Attempting to connect to ${walletType}. Available in window:`, hasWallet);
 
@@ -173,27 +187,8 @@ const Dashboard = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const getWalletIcon = (type: string) => {
-    switch (type) {
-      case "Phantom":
-        return "https://phantom.app/favicon.ico";
-      case "Solflare":
-        return "https://solflare.com/favicon.ico";
-      case "Magic Eden":
-        return "https://magiceden.io/favicon.ico";
-      case "OKX Wallet":
-        return "https://www.okx.com/favicon.ico";
-      case "Backpack":
-        return "https://www.backpack.app/favicon.ico";
-      case "Torus":
-        return "https://tor.us/favicon.ico";
-      case "MathWallet":
-        return "https://mathwallet.org/favicon.ico";
-      case "Coinbase Wallet":
-        return "https://www.coinbase.com/favicon.ico";
-      default:
-        return "";
-    }
+  const getWalletIcon = (type: string): string => {
+    return walletIcons[type as keyof typeof walletIcons] || "";
   };
 
   const shortenAddress = (address: string | null) => {
@@ -249,20 +244,30 @@ const Dashboard = () => {
                 <div className="bg-[#0e0e12] text-white p-5 relative">
                   <DialogHeader className="pb-4">
                     <DialogTitle className="text-center text-xl font-medium">Connect a wallet on Solana to continue</DialogTitle>
+                    <DialogDescription className="text-center text-sm text-gray-400">
+                      Select a wallet provider to connect with yosol
+                    </DialogDescription>
                   </DialogHeader>
                   <DialogClose className="absolute right-4 top-4 text-gray-400 hover:text-white">
                     <X className="h-4 w-4" />
                   </DialogClose>
                 </div>
                 <div className="bg-gradient-to-b from-[#5846f9]/20 to-[#1de9b6]/20 backdrop-blur-sm">
-                  {walletOptions.map((wallet, index) => (
+                  {walletOptions.map((wallet) => (
                     <div 
                       key={wallet.name}
                       onClick={() => connectWallet(wallet.name)}
                       className="flex items-center justify-between p-4 hover:bg-white/10 transition-colors cursor-pointer border-t border-white/10 first:border-t-0"
                     >
                       <div className="flex items-center gap-3">
-                        <img src={getWalletIcon(wallet.name)} alt={wallet.name} className="h-6 w-6 rounded-full" />
+                        <img 
+                          src={getWalletIcon(wallet.name)} 
+                          alt={wallet.name} 
+                          className="h-6 w-6 rounded-full bg-gray-800"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                          }} 
+                        />
                         <span className="text-white font-medium">{wallet.name}</span>
                       </div>
                       {wallet.detected && <span className="text-[#1de9b6] text-sm">Detected</span>}
@@ -275,7 +280,16 @@ const Dashboard = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="border-solana text-solana hover:bg-solana/10 flex items-center gap-2">
-                  {connectedWalletType && <img src={getWalletIcon(connectedWalletType)} alt={connectedWalletType} className="h-4 w-4" />}
+                  {connectedWalletType && (
+                    <img 
+                      src={getWalletIcon(connectedWalletType)} 
+                      alt={connectedWalletType} 
+                      className="h-4 w-4 rounded-full" 
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/placeholder.svg";
+                      }}
+                    />
+                  )}
                   <Wallet className="h-4 w-4" /> 
                   <span className="hidden sm:inline">{connectedWalletType}:</span> {shortenAddress(walletAddress)}
                   <ChevronDown className="h-3 w-3 ml-1" />

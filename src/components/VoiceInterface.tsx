@@ -27,12 +27,14 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       recognitionRef.current.lang = 'en-US';
       
       recognitionRef.current.onstart = () => {
+        console.log('Speech recognition started');
         setIsListening(true);
         setIsAnimating(true);
         setCommand('Listening...');
       };
       
       recognitionRef.current.onresult = (event) => {
+        console.log('Speech recognition result', event.results);
         const transcript = Array.from(event.results)
           .map(result => result[0])
           .map(result => result.transcript)
@@ -42,6 +44,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       };
       
       recognitionRef.current.onend = () => {
+        console.log('Speech recognition ended');
         if (command && command !== 'Listening...' && onCommand) {
           onCommand(command);
         }
@@ -53,6 +56,12 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
         console.error('Speech recognition error', event.error);
         setIsListening(false);
         setIsAnimating(false);
+        
+        toast({
+          title: "Voice Recognition Error",
+          description: `Error: ${event.error}. Please try again or check microphone permissions.`,
+          variant: "destructive"
+        });
         
         if (event.error === 'not-allowed') {
           toast({
@@ -98,6 +107,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   }, [command, onCommand]);
 
   const handleStartListening = () => {
+    console.log('Starting listening process');
     if (!recognitionRef.current || !isBrowserSupported) {
       // Fallback for browsers without speech recognition
       simulateVoiceRecognition();
@@ -109,10 +119,14 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       console.log("Voice recognition started");
     } catch (error) {
       console.error('Recognition start error:', error);
+      // If we get an error, try stopping and restarting
       try {
         recognitionRef.current.stop();
         setTimeout(() => {
-          recognitionRef.current?.start();
+          if (recognitionRef.current) {
+            recognitionRef.current.start();
+            console.log("Voice recognition restarted");
+          }
         }, 100);
       } catch (stopError) {
         console.error('Could not restart recognition:', stopError);
@@ -122,6 +136,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   };
 
   const handleStopListening = () => {
+    console.log('Stopping listening process');
     if (recognitionRef.current && isBrowserSupported) {
       try {
         recognitionRef.current.stop();
