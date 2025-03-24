@@ -1,5 +1,7 @@
 
 import React, { useState } from 'react';
+import { Wallet, Shield, Zap, Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface VoiceInterfaceProps {
   onCommand?: (command: string) => void;
@@ -9,6 +11,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   const [isListening, setIsListening] = useState(false);
   const [command, setCommand] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
 
   const handleStartListening = () => {
     setIsListening(true);
@@ -26,6 +29,11 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
     if (command && onCommand) {
       onCommand(command);
     }
+  };
+
+  const handleConnectWallet = () => {
+    // Simulate wallet connection
+    setIsWalletConnected(true);
   };
 
   const handleRippleEffect = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -105,8 +113,16 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
         </div>
       )}
 
-      <div className="mt-6 text-center">
-        <p className="text-xs text-muted-foreground">Try: "Send SOL", "Check balance", "Market insights"</p>
+      <div className="mt-6 flex flex-col gap-4">
+        <p className="text-xs text-muted-foreground text-center">Try: "Send SOL", "Check balance", "Market insights"</p>
+        
+        <Button 
+          onClick={handleConnectWallet} 
+          className="w-full bg-gradient-to-r from-solana to-wallet-accent hover:from-solana-dark hover:to-solana text-white"
+        >
+          <Wallet className="mr-2 h-4 w-4" />
+          {isWalletConnected ? 'Wallet Connected' : 'Connect Wallet'}
+        </Button>
       </div>
     </div>
   );

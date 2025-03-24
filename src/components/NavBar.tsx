@@ -23,6 +23,19 @@ const NavBar: React.FC = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+  // Helper function to scroll to section
+  const scrollToSection = (id: string) => {
+    setMobileMenuOpen(false);
+    if (location.pathname !== '/') {
+      // Navigate to home and then scroll after render
+      return;
+    }
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
@@ -58,7 +71,8 @@ const NavBar: React.FC = () => {
             {[
               { path: '/', label: 'Home' },
               { path: '/dashboard', label: 'Dashboard' },
-              { path: '/features', label: 'Features' }
+              { path: '#features', label: 'Features', onClick: () => scrollToSection('features') },
+              { path: '#roadmap', label: 'Roadmap', onClick: () => scrollToSection('roadmap') }
             ].map((item, index) => (
               <motion.div
                 key={item.path}
@@ -66,12 +80,21 @@ const NavBar: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 * index }}
               >
-                <Link 
-                  to={item.path} 
-                  className={`nav-link ${location.pathname === item.path ? 'text-foreground after:scale-x-100' : ''}`}
-                >
-                  {item.label}
-                </Link>
+                {item.onClick ? (
+                  <button
+                    onClick={item.onClick}
+                    className={`nav-link ${location.pathname === item.path ? 'text-foreground after:scale-x-100' : ''}`}
+                  >
+                    {item.label}
+                  </button>
+                ) : (
+                  <Link 
+                    to={item.path} 
+                    className={`nav-link ${location.pathname === item.path ? 'text-foreground after:scale-x-100' : ''}`}
+                  >
+                    {item.label}
+                  </Link>
+                )}
               </motion.div>
             ))}
           </nav>
@@ -121,7 +144,8 @@ const NavBar: React.FC = () => {
               {[
                 { path: '/', label: 'Home' },
                 { path: '/dashboard', label: 'Dashboard' },
-                { path: '/features', label: 'Features' }
+                { path: '#features', label: 'Features', onClick: () => scrollToSection('features') },
+                { path: '#roadmap', label: 'Roadmap', onClick: () => scrollToSection('roadmap') }
               ].map((item, index) => (
                 <motion.div
                   key={item.path}
@@ -129,13 +153,22 @@ const NavBar: React.FC = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: 0.05 * index }}
                 >
-                  <Link 
-                    to={item.path} 
-                    className={`text-lg font-medium ${location.pathname === item.path ? 'text-solana' : 'text-foreground'}`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
+                  {item.onClick ? (
+                    <button
+                      onClick={item.onClick}
+                      className={`text-lg font-medium ${location.pathname === item.path ? 'text-solana' : 'text-foreground'}`}
+                    >
+                      {item.label}
+                    </button>
+                  ) : (
+                    <Link 
+                      to={item.path} 
+                      className={`text-lg font-medium ${location.pathname === item.path ? 'text-solana' : 'text-foreground'}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  )}
                 </motion.div>
               ))}
             </div>
