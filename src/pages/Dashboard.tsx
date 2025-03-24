@@ -6,10 +6,19 @@ import VoiceInterface from '../components/VoiceInterface';
 import AIAssistant from '../components/AIAssistant';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Wallet } from 'lucide-react';
+import { Wallet, ChevronDown } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 const Dashboard = () => {
   const [lastCommand, setLastCommand] = useState<string | null>(null);
   const [walletConnected, setWalletConnected] = useState(false);
+  const [connectedWalletType, setConnectedWalletType] = useState<string | null>(null);
+  
   const handleVoiceCommand = (command: string) => {
     setLastCommand(command);
     console.log("Voice command received:", command);
@@ -48,7 +57,7 @@ const Dashboard = () => {
       });
     } else if (lowerCommand.includes('wallet') && lowerCommand.includes('connect')) {
       if (!walletConnected) {
-        connectWallet();
+        connectWallet("Phantom");
       } else {
         toast({
           title: "Wallet Already Connected",
@@ -64,24 +73,27 @@ const Dashboard = () => {
       });
     }
   };
-  const connectWallet = () => {
+
+  const connectWallet = (walletType: string) => {
     // Simulate wallet connection
     toast({
-      title: "Connecting Wallet",
-      description: "Connecting to your Solana wallet...",
+      title: `Connecting ${walletType}`,
+      description: `Connecting to your Solana wallet via ${walletType}...`,
       variant: "default"
     });
 
     // Simulate connection delay
     setTimeout(() => {
       setWalletConnected(true);
+      setConnectedWalletType(walletType);
       toast({
         title: "Wallet Connected",
-        description: "Your wallet has been successfully connected.",
+        description: `Your ${walletType} wallet has been successfully connected.`,
         variant: "default"
       });
     }, 1000);
   };
+
   useEffect(() => {
     // Welcome toast on first load
     const timer = setTimeout(() => {
@@ -93,17 +105,46 @@ const Dashboard = () => {
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
+
   return <Layout>
       <div className="container px-4 md:px-6 py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <h1 className="text-3xl font-bold animate-fade-in my-[37px] mx-[5px]">Dashboard</h1>
           
-          {!walletConnected ? <Button onClick={connectWallet} className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90 transition-opacity duration-300 gap-2">
-              <Wallet className="h-4 w-4" /> Connect Wallet
-            </Button> : <Button variant="outline" className="border-solana text-solana hover:bg-solana/10">
+          {!walletConnected ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90 transition-opacity duration-300 gap-2">
+                  <Wallet className="h-4 w-4" /> Connect Wallet <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-background/95 backdrop-blur-sm border-solana/20">
+                <DropdownMenuItem onClick={() => connectWallet("Phantom")} className="cursor-pointer flex items-center gap-2">
+                  <img src="https://phantom.app/favicon.ico" alt="Phantom" className="h-5 w-5" /> Phantom
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => connectWallet("Solflare")} className="cursor-pointer flex items-center gap-2">
+                  <img src="https://solflare.com/favicon.ico" alt="Solflare" className="h-5 w-5" /> Solflare
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => connectWallet("Backpack")} className="cursor-pointer flex items-center gap-2">
+                  <img src="https://www.backpack.app/favicon.ico" alt="Backpack" className="h-5 w-5" /> Backpack
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => connectWallet("Ledger")} className="cursor-pointer flex items-center gap-2">
+                  <img src="https://www.ledger.com/favicon.ico" alt="Ledger" className="h-5 w-5" /> Ledger
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => connectWallet("Brave")} className="cursor-pointer flex items-center gap-2">
+                  <img src="https://brave.com/static-assets/images/brave-favicon.png" alt="Brave" className="h-5 w-5" /> Brave Wallet
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => connectWallet("Glow")} className="cursor-pointer flex items-center gap-2">
+                  <img src="https://glow.app/favicon.ico" alt="Glow" className="h-5 w-5" /> Glow
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="outline" className="border-solana text-solana hover:bg-solana/10">
               <Wallet className="h-4 w-4 mr-2" /> 
-              7X4F...8dj2
-            </Button>}
+              {connectedWalletType}: 7X4F...8dj2
+            </Button>
+          )}
         </div>
         
         <div className="grid gap-6 md:grid-cols-3">
@@ -126,4 +167,5 @@ const Dashboard = () => {
       </div>
     </Layout>;
 };
+
 export default Dashboard;
