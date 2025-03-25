@@ -250,53 +250,12 @@ const Dashboard = () => {
       variant: "default"
     });
 
-    if (walletType.toLowerCase() === 'phantom' || walletType.toLowerCase() === 'solflare') {
-      providerConnectWallet(walletType.toLowerCase() as 'phantom' | 'solflare')
-        .then(() => {
-          setIsConnecting(false);
-          setShowWalletDialog(false);
-        })
-        .catch((error) => {
-          console.error("Wallet connection error:", error);
-          setIsConnecting(false);
-          setWalletConnectionError(error instanceof Error ? error.message : "Unknown error occurred");
-          
-          toast({
-            title: "Connection Failed",
-            description: error instanceof Error ? error.message : "Failed to connect wallet. Please try again.",
-            variant: "destructive"
-          });
-        });
-      return;
-    }
-
-    const walletLowerCase = walletType.toLowerCase().replace(' ', '');
-    const hasWallet = typeof window !== 'undefined' && 
-                     (window as any)[walletLowerCase];
-    
-    console.log(`Attempting to connect to ${walletType}. Available in window:`, hasWallet);
-
-    setTimeout(() => {
-      try {
-        if (Math.random() < 0.1) {
-          throw new Error("Connection timeout. Please try again.");
-        }
-        
-        const randomAddress = generateRandomWalletAddress();
-        console.log(`Connected to wallet with address: ${randomAddress}`);
-        
-        setWalletAddress(randomAddress);
-        setWalletConnected(true);
-        setConnectedWalletType(walletType);
+    providerConnectWallet(walletType.toLowerCase())
+      .then(() => {
         setIsConnecting(false);
         setShowWalletDialog(false);
-        
-        toast({
-          title: "Wallet Connected",
-          description: `Your ${walletType} wallet has been successfully connected.`,
-          variant: "default"
-        });
-      } catch (error) {
+      })
+      .catch((error) => {
         console.error("Wallet connection error:", error);
         setIsConnecting(false);
         setWalletConnectionError(error instanceof Error ? error.message : "Unknown error occurred");
@@ -306,8 +265,7 @@ const Dashboard = () => {
           description: error instanceof Error ? error.message : "Failed to connect wallet. Please try again.",
           variant: "destructive"
         });
-      }
-    }, 1500);
+      });
   };
 
   const disconnectWallet = () => {
@@ -512,7 +470,6 @@ const Dashboard = () => {
                       }}
                     />
                   )}
-                  <Wallet className="h-4 w-4" /> 
                   <span className="hidden sm:inline">{connectedWalletType}:</span> {shortenAddress(walletAddress)}
                   <ChevronDown className="h-3 w-3 ml-1" />
                 </Button>
