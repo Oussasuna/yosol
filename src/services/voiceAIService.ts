@@ -29,19 +29,56 @@ export const audioBufferToBlob = (buffer: Float32Array): Blob => {
   return new Blob([int16Array], { type: 'audio/webm' });
 };
 
+// Retry logic for edge function calls
+const retryEdgeFunction = async (
+  functionName: string, 
+  body: any, 
+  maxRetries: number = 2
+): Promise<any> => {
+  let lastError;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Calling ${functionName} function, attempt ${attempt + 1}`);
+      
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: body,
+      });
+
+      if (error) {
+        console.error(`Error in ${functionName} attempt ${attempt + 1}:`, error);
+        lastError = error;
+        
+        // Wait before retrying (exponential backoff)
+        if (attempt < maxRetries) {
+          const delay = Math.pow(2, attempt) * 500;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+        continue;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error(`Exception in ${functionName} attempt ${attempt + 1}:`, error);
+      lastError = error;
+      
+      if (attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 500;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw lastError || new Error(`Failed to call ${functionName} after ${maxRetries + 1} attempts`);
+};
+
 // Transcribe audio using OpenAI's Whisper API through our Supabase Edge Function
 export const transcribeAudio = async (audioBase64: string): Promise<string> => {
   try {
     console.log("Invoking voice-to-text function with audio data length:", audioBase64.length);
     
-    const { data, error } = await supabase.functions.invoke('voice-to-text', {
-      body: { audio: audioBase64 },
-    });
-
-    if (error) {
-      console.error('Error transcribing audio:', error);
-      throw new Error(error.message || 'Error transcribing audio');
-    }
+    // Use retry logic for more resilience
+    const data = await retryEdgeFunction('voice-to-text', { audio: audioBase64 });
 
     if (!data || !data.text) {
       throw new Error('No transcription returned from service');
@@ -73,14 +110,8 @@ export const textToSpeech = async (
   try {
     console.log("Invoking text-to-voice function with text:", text, "and voice:", voice);
     
-    const { data, error } = await supabase.functions.invoke('text-to-voice', {
-      body: { text, voice },
-    });
-
-    if (error) {
-      console.error('Error generating speech:', error);
-      throw new Error(error.message || 'Error generating speech');
-    }
+    // Use retry logic for more resilience
+    const data = await retryEdgeFunction('text-to-voice', { text, voice });
 
     if (!data || !data.audioContent) {
       throw new Error('No audio content returned from service');

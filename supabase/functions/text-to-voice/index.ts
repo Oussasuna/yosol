@@ -9,16 +9,26 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("Received request to text-to-voice function");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("Handling OPTIONS request with CORS headers");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log("Parsing request body");
     const { text, voice } = await req.json();
 
     if (!text) {
+      console.error("No text provided");
       throw new Error('Text is required');
+    }
+
+    if (!openAIApiKey) {
+      console.error("OpenAI API key is not set");
+      throw new Error('OpenAI API key is not configured');
     }
 
     console.log(`Generating speech for text: "${text}" with voice: ${voice || 'alloy'}`);
@@ -44,13 +54,15 @@ serve(async (req) => {
       throw new Error(errorData.error?.message || 'Failed to generate speech');
     }
 
+    console.log("OpenAI response received, processing audio data");
+    
     // Convert audio buffer to base64
     const arrayBuffer = await response.arrayBuffer();
     const base64Audio = btoa(
       String.fromCharCode(...new Uint8Array(arrayBuffer))
     );
 
-    console.log("Speech generation successful, returning audio data");
+    console.log("Speech generation successful, returning audio data of length:", base64Audio.length);
 
     return new Response(
       JSON.stringify({ audioContent: base64Audio }),
