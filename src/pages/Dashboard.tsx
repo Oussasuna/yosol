@@ -39,17 +39,6 @@ import {
   CardContent,
 } from "@/components/ui/card";
 
-const walletIcons = {
-  "Phantom": "https://phantom.app/favicon.ico",
-  "Solflare": "https://solflare.com/favicon.ico",
-  "Magic Eden": "https://magiceden.io/favicon.ico",
-  "OKX Wallet": "https://www.okx.com/favicon.ico",
-  "Backpack": "https://www.backpack.app/favicon.ico",
-  "Torus": "https://tor.us/favicon.ico",
-  "MathWallet": "https://mathwallet.org/favicon.ico",
-  "Coinbase Wallet": "https://www.coinbase.com/favicon.ico",
-};
-
 const Dashboard = () => {
   const { 
     connectWallet: providerConnectWallet, 
@@ -388,14 +377,14 @@ const Dashboard = () => {
   };
 
   const walletOptions = [
-    { name: "Phantom", detected: true },
-    { name: "Solflare", detected: true },
-    { name: "Magic Eden", detected: true },
-    { name: "OKX Wallet", detected: true },
-    { name: "Backpack", detected: true },
-    { name: "Torus", detected: true },
-    { name: "MathWallet", detected: false },
-    { name: "Coinbase Wallet", detected: false }
+    { name: "Phantom", icon: <Wallet size={20} className="text-purple-400" />, detected: true },
+    { name: "Solflare", icon: <Wallet size={20} className="text-orange-400" />, detected: true },
+    { name: "Magic Eden", icon: <Wallet size={20} className="text-pink-400" />, detected: true },
+    { name: "OKX Wallet", icon: <Wallet size={20} className="text-blue-400" />, detected: true },
+    { name: "Backpack", icon: <Wallet size={20} className="text-green-400" />, detected: true },
+    { name: "Torus", icon: <Wallet size={20} className="text-yellow-400" />, detected: true },
+    { name: "MathWallet", icon: <Wallet size={20} className="text-red-400" />, detected: false },
+    { name: "Coinbase Wallet", icon: <Wallet size={20} className="text-blue-500" />, detected: false }
   ];
 
   return <Layout>
@@ -440,14 +429,7 @@ const Dashboard = () => {
                       className="flex items-center justify-between p-4 hover:bg-white/10 transition-colors cursor-pointer border-t border-white/10 first:border-t-0"
                     >
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={getWalletIcon(wallet.name)} 
-                          alt={wallet.name} 
-                          className="h-6 w-6 rounded-full bg-gray-800"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = "/placeholder.svg";
-                          }} 
-                        />
+                        {wallet.icon}
                         <span className="text-white font-medium">{wallet.name}</span>
                       </div>
                       {wallet.detected && <span className="text-[#1de9b6] text-sm">Detected</span>}
@@ -461,14 +443,8 @@ const Dashboard = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="border-solana text-solana hover:bg-solana/10 flex items-center gap-2">
                   {connectedWalletType && (
-                    <img 
-                      src={getWalletIcon(connectedWalletType)} 
-                      alt={connectedWalletType} 
-                      className="h-4 w-4 rounded-full" 
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/placeholder.svg";
-                      }}
-                    />
+                    walletOptions.find(w => w.name === connectedWalletType)?.icon || 
+                    <Wallet className="h-4 w-4" />
                   )}
                   <span className="hidden sm:inline">{connectedWalletType}:</span> {shortenAddress(walletAddress)}
                   <ChevronDown className="h-3 w-3 ml-1" />
