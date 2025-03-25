@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
 
 interface FeatureCardProps {
   icon: LucideIcon;
@@ -9,6 +10,7 @@ interface FeatureCardProps {
   description: string;
   color?: string;
   delay?: number;
+  comingSoon?: boolean;
 }
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ 
@@ -16,7 +18,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
   title, 
   description,
   color = "text-solana",
-  delay = 0
+  delay = 0,
+  comingSoon = true // Default to true for all features being "Coming Soon"
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -33,6 +36,18 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
     >
+      {/* Coming Soon overlay */}
+      {comingSoon && (
+        <div className="absolute top-0 right-0 z-20 m-2">
+          <Badge 
+            variant="outline" 
+            className="bg-white/10 text-white border-white/20 backdrop-blur-sm"
+          >
+            Coming Soon
+          </Badge>
+        </div>
+      )}
+      
       {/* Background glow effect */}
       <div 
         className={`absolute -inset-1 ${color === 'text-solana' ? 'bg-solana/10' : 'bg-wallet-accent/10'} rounded-xl blur-xl opacity-0 group-hover:opacity-70 transition-opacity duration-500`}

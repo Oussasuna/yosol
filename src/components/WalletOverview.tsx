@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowUp, ArrowDown, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface WalletOverviewProps {
   walletConnected?: boolean;
@@ -128,11 +129,19 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Total Transactions', value: '143' },
-          { label: 'Staked SOL', value: '50.00' },
-          { label: 'NFTs', value: '7' },
-          { label: 'Tokens', value: '5' }
+          { label: 'Staked SOL', value: '50.00', comingSoon: true },
+          { label: 'NFTs', value: '7', comingSoon: true },
+          { label: 'Tokens', value: '5', comingSoon: true }
         ].map((item, index) => (
-          <div key={index} className="bg-white/5 p-4 rounded-lg">
+          <div key={index} className="bg-white/5 p-4 rounded-lg relative">
+            {item.comingSoon && (
+              <Badge 
+                variant="outline" 
+                className="absolute top-1 right-1 bg-white/10 text-white border-white/20 text-[10px] px-1.5 py-0.5"
+              >
+                Soon
+              </Badge>
+            )}
             <p className="text-xs text-muted-foreground mb-1">{item.label}</p>
             <p className="text-xl font-semibold">{item.value}</p>
           </div>
