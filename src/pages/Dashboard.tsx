@@ -300,10 +300,6 @@ const Dashboard = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const getWalletIcon = (type: string): string => {
-    return walletIcons[type as keyof typeof walletIcons] || "";
-  };
-
   const shortenAddress = (address: string | null) => {
     if (!address) return "";
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
