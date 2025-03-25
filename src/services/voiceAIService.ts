@@ -32,6 +32,8 @@ export const audioBufferToBlob = (buffer: Float32Array): Blob => {
 // Transcribe audio using OpenAI's Whisper API through our Supabase Edge Function
 export const transcribeAudio = async (audioBase64: string): Promise<string> => {
   try {
+    console.log("Invoking voice-to-text function with audio data length:", audioBase64.length);
+    
     const { data, error } = await supabase.functions.invoke('voice-to-text', {
       body: { audio: audioBase64 },
     });
@@ -41,6 +43,11 @@ export const transcribeAudio = async (audioBase64: string): Promise<string> => {
       throw new Error(error.message || 'Error transcribing audio');
     }
 
+    if (!data || !data.text) {
+      throw new Error('No transcription returned from service');
+    }
+
+    console.log("Transcription received:", data.text);
     return data.text;
   } catch (error) {
     console.error('Voice transcription error:', error);
@@ -64,6 +71,8 @@ export const textToSpeech = async (
   voice: string = OPENAI_VOICES.NOVA
 ): Promise<string> => {
   try {
+    console.log("Invoking text-to-voice function with text:", text, "and voice:", voice);
+    
     const { data, error } = await supabase.functions.invoke('text-to-voice', {
       body: { text, voice },
     });
@@ -73,6 +82,11 @@ export const textToSpeech = async (
       throw new Error(error.message || 'Error generating speech');
     }
 
+    if (!data || !data.audioContent) {
+      throw new Error('No audio content returned from service');
+    }
+
+    console.log("Audio content received, length:", data.audioContent.length);
     return data.audioContent;
   } catch (error) {
     console.error('Text to speech error:', error);
@@ -86,9 +100,16 @@ export const playAudioFromBase64 = (base64Audio: string): Promise<void> => {
     try {
       const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
       audio.onended = () => resolve();
-      audio.onerror = (e) => reject(e);
-      audio.play().catch(reject);
+      audio.onerror = (e) => {
+        console.error("Audio playback error:", e);
+        reject(e);
+      };
+      audio.play().catch(err => {
+        console.error("Audio play error:", err);
+        reject(err);
+      });
     } catch (error) {
+      console.error("Audio setup error:", error);
       reject(error);
     }
   });
