@@ -4,6 +4,7 @@ import { ArrowUp, ArrowDown, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { usePhantomWallet } from './PhantomWalletProvider';
 
 interface WalletOverviewProps {
   walletConnected?: boolean;
@@ -15,13 +16,28 @@ interface WalletOverviewProps {
 }
 
 const WalletOverview: React.FC<WalletOverviewProps> = ({ 
-  walletConnected = false, 
-  walletAddress = null,
-  walletType = null,
-  balance = 243.75,
+  walletConnected: propWalletConnected,
+  walletAddress: propWalletAddress,
+  walletType: propWalletType,
+  balance: propBalance,
   onSend,
   onReceive
 }) => {
+  const { 
+    walletConnected: contextWalletConnected, 
+    walletAddress: contextWalletAddress,
+    walletType: contextWalletType,
+    balance: contextBalance,
+    handleSend: contextHandleSend,
+    handleReceive: contextHandleReceive
+  } = usePhantomWallet();
+  
+  // Use props if provided, otherwise fall back to context values
+  const walletConnected = propWalletConnected !== undefined ? propWalletConnected : contextWalletConnected;
+  const walletAddress = propWalletAddress !== null ? propWalletAddress : contextWalletAddress;
+  const walletType = propWalletType !== null ? propWalletType : contextWalletType;
+  const balance = propBalance !== undefined ? propBalance : contextBalance;
+  
   const [isCopied, setIsCopied] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const shortAddress = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : '';
@@ -49,6 +65,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     setIsLoadingSend(true);
     if (onSend) {
       onSend();
+    } else if (contextHandleSend) {
+      contextHandleSend();
     } else {
       toast({
         title: "Send Request",
@@ -62,6 +80,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     setIsLoadingReceive(true);
     if (onReceive) {
       onReceive();
+    } else if (contextHandleReceive) {
+      contextHandleReceive();
     } else {
       toast({
         title: "Receive Request",

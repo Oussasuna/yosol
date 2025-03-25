@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import WalletOverview from '../components/WalletOverview';
@@ -8,6 +7,7 @@ import AIAssistant from '../components/AIAssistant';
 import FeatureCard from '../components/FeatureCard';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
+import { usePhantomWallet } from '@/components/PhantomWalletProvider';
 import { 
   Wallet, ChevronDown, LogOut, ExternalLink, Copy, Check, X,
   Zap, Shield, ArrowLeftRight, LineChart, Globe, Briefcase, 
@@ -15,24 +15,6 @@ import {
   Lock, Ban, BookOpen, BellRing, Wallet2, Braces, 
   LayoutDashboard, AlertCircle
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const walletIcons = {
   "Phantom": "https://phantom.app/favicon.ico",
@@ -46,6 +28,15 @@ const walletIcons = {
 };
 
 const Dashboard = () => {
+  const { 
+    connectWallet: providerConnectWallet, 
+    disconnectWallet: providerDisconnectWallet,
+    walletConnected: providerWalletConnected,
+    walletAddress: providerWalletAddress,
+    walletType: providerWalletType,
+    isInitialized
+  } = usePhantomWallet();
+  
   const [lastCommand, setLastCommand] = useState<string | null>(null);
   const [walletConnected, setWalletConnected] = useState(false);
   const [connectedWalletType, setConnectedWalletType] = useState<string | null>(null);
@@ -61,6 +52,14 @@ const Dashboard = () => {
     type: 'send' | 'stake' | 'swap';
   } | null>(null);
   
+  useEffect(() => {
+    if (isInitialized && providerWalletConnected) {
+      setWalletConnected(providerWalletConnected);
+      setWalletAddress(providerWalletAddress);
+      setConnectedWalletType(providerWalletType);
+    }
+  }, [isInitialized, providerWalletConnected, providerWalletAddress, providerWalletType]);
+
   const handleVoiceCommand = (command: string) => {
     setLastCommand(command);
     console.log("Voice command received:", command);
@@ -228,16 +227,34 @@ const Dashboard = () => {
       variant: "default"
     });
 
+    if (walletType.toLowerCase() === 'phantom' || walletType.toLowerCase() === 'solflare') {
+      providerConnectWallet(walletType.toLowerCase() as 'phantom' | 'solflare')
+        .then(() => {
+          setIsConnecting(false);
+          setShowWalletDialog(false);
+        })
+        .catch((error) => {
+          console.error("Wallet connection error:", error);
+          setIsConnecting(false);
+          setWalletConnectionError(error instanceof Error ? error.message : "Unknown error occurred");
+          
+          toast({
+            title: "Connection Failed",
+            description: error instanceof Error ? error.message : "Failed to connect wallet. Please try again.",
+            variant: "destructive"
+          });
+        });
+      return;
+    }
+
     const walletLowerCase = walletType.toLowerCase().replace(' ', '');
     const hasWallet = typeof window !== 'undefined' && 
                      (window as any)[walletLowerCase];
     
     console.log(`Attempting to connect to ${walletType}. Available in window:`, hasWallet);
 
-    // Simulate wallet connection
     setTimeout(() => {
       try {
-        // Simulate a 10% chance of connection error for realism
         if (Math.random() < 0.1) {
           throw new Error("Connection timeout. Please try again.");
         }
@@ -271,11 +288,7 @@ const Dashboard = () => {
   };
 
   const disconnectWallet = () => {
-    toast({
-      title: "Wallet Disconnected",
-      description: "Your wallet has been successfully disconnected.",
-      variant: "default"
-    });
+    providerDisconnectWallet();
     setWalletConnected(false);
     setConnectedWalletType(null);
     setWalletAddress(null);
@@ -358,12 +371,10 @@ const Dashboard = () => {
     
     setProcessingTransaction(true);
     
-    // Simulate transaction processing
     setTimeout(() => {
       setProcessingTransaction(false);
       setTransactionConfirmData(null);
       
-      // Success toast based on transaction type
       if (transactionConfirmData.type === 'send') {
         toast({
           title: "Transaction Successful",
