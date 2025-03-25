@@ -439,7 +439,7 @@ const Dashboard = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="border-solana text-solana hover:bg-solana/10 flex items-center gap-2">
                   {connectedWalletType && (
-                    walletOptions.find(w => w.name === connectedWalletType)?.icon || 
+                    walletOptions.find(w => w.name.toLowerCase() === connectedWalletType.toLowerCase())?.icon || 
                     <Wallet className="h-4 w-4" />
                   )}
                   <span className="hidden sm:inline">{connectedWalletType}:</span> {shortenAddress(walletAddress)}
