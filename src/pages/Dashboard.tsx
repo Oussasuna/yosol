@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import WalletOverview from '../components/WalletOverview';
@@ -7,7 +6,7 @@ import VoiceInterface from '../components/VoiceInterface';
 import AIAssistant from '../components/AIAssistant';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Wallet, ChevronDown, LogOut, ExternalLink, Copy, Check, X } from 'lucide-react';
+import { Wallet, ChevronDown, LogOut, ExternalLink, Copy, Check, X, TrendingUp, Shield, AlarmClock, Shuffle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,8 +23,9 @@ import {
   DialogClose,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 
-// Define wallet icons object for reliable access
 const walletIcons = {
   "Phantom": "https://phantom.app/favicon.ico",
   "Solflare": "https://solflare.com/favicon.ico",
@@ -101,10 +101,9 @@ const Dashboard = () => {
   };
 
   const generateRandomWalletAddress = () => {
-    // Generate a random Solana wallet address (for demo purposes)
     const characters = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
     let result = '';
-    const length = 44; // Typical Solana address length is 44 chars
+    const length = 44;
     
     for (let i = 0; i < length; i++) {
       result += characters.charAt(Math.floor(Math.random() * characters.length));
@@ -124,7 +123,6 @@ const Dashboard = () => {
       variant: "default"
     });
 
-    // Check if wallet extension is available in window
     const walletLowerCase = walletType.toLowerCase().replace(' ', '');
     const hasWallet = typeof window !== 'undefined' && 
                      (window as any)[walletLowerCase];
@@ -231,6 +229,22 @@ const Dashboard = () => {
     { name: "MathWallet", detected: false },
     { name: "Coinbase Wallet", detected: false }
   ];
+
+  const FeatureCard = ({ icon: Icon, title, description, color = "text-solana" }) => (
+    <Card className="p-4 relative overflow-hidden">
+      <Badge 
+        variant="outline" 
+        className="absolute top-2 right-2 bg-white/10 text-white border-white/20 backdrop-blur-sm"
+      >
+        Coming Soon
+      </Badge>
+      <div className={`p-3 rounded-lg inline-block mb-3 ${color === 'text-solana' ? 'bg-solana/10' : 'bg-wallet-accent/10'} backdrop-blur-lg`}>
+        <Icon className={`h-5 w-5 ${color}`} />
+      </div>
+      <h3 className="text-lg font-medium mb-1">{title}</h3>
+      <p className="text-sm text-muted-foreground">{description}</p>
+    </Card>
+  );
 
   return <Layout>
       <div className="container px-4 md:px-6 py-8">
@@ -349,6 +363,36 @@ const Dashboard = () => {
           </div>
           <div>
             <AIAssistant />
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-6">More Features</h2>
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <FeatureCard 
+              icon={TrendingUp}
+              title="Smart Trading"
+              description="AI-powered trading suggestions based on market trends and your portfolio"
+              color="text-solana"
+            />
+            <FeatureCard 
+              icon={Shield}
+              title="Security Advisor"
+              description="Get alerts about suspicious transactions and security recommendations"
+              color="text-wallet-accent"
+            />
+            <FeatureCard 
+              icon={AlarmClock}
+              title="Price Alerts"
+              description="Set custom price alerts for tokens in your portfolio"
+              color="text-solana"
+            />
+            <FeatureCard 
+              icon={Shuffle}
+              title="Auto Swap"
+              description="Automatically swap tokens based on market conditions"
+              color="text-wallet-accent"
+            />
           </div>
         </div>
       </div>
