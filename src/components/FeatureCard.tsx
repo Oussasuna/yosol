@@ -40,8 +40,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
       {comingSoon && (
         <div className="absolute top-0 right-0 z-20 m-2">
           <Badge 
-            variant="outline" 
-            className="bg-white/10 text-white border-white/20 backdrop-blur-sm"
+            variant="solid"
+            className="shadow-md"
           >
             Coming Soon
           </Badge>

@@ -136,8 +136,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           <div key={index} className="bg-white/5 p-4 rounded-lg relative">
             {item.comingSoon && (
               <Badge 
-                variant="outline" 
-                className="absolute top-1 right-1 bg-white/10 text-white border-white/20 text-[10px] px-1.5 py-0.5"
+                variant="solid" 
+                className="absolute top-1 right-1 text-[10px] px-1.5 py-0.5 shadow-md"
               >
                 Soon
               </Badge>
