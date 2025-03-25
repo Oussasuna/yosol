@@ -25,6 +25,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   const [isCopied, setIsCopied] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const shortAddress = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : '';
+  const [isLoadingSend, setIsLoadingSend] = useState(false);
+  const [isLoadingReceive, setIsLoadingReceive] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
@@ -44,6 +46,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   };
 
   const handleSend = () => {
+    setIsLoadingSend(true);
     if (onSend) {
       onSend();
     } else {
@@ -52,9 +55,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         description: "Send functionality is being implemented.",
       });
     }
+    setTimeout(() => setIsLoadingSend(false), 1000);
   };
 
   const handleReceive = () => {
+    setIsLoadingReceive(true);
     if (onReceive) {
       onReceive();
     } else {
@@ -63,6 +68,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         description: "Receive functionality is being implemented.",
       });
     }
+    setTimeout(() => setIsLoadingReceive(false), 1000);
   };
 
   if (!walletConnected) {
@@ -104,16 +110,28 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             size="sm" 
             className="flex items-center gap-1 bg-white/5 hover:bg-white/10"
             onClick={handleReceive}
+            disabled={isLoadingReceive}
           >
-            <ArrowDown className="h-4 w-4 text-wallet-accent" /> Receive
+            {isLoadingReceive ? (
+              <div className="h-4 w-4 border-2 border-wallet-accent border-t-transparent rounded-full animate-spin mr-1"></div>
+            ) : (
+              <ArrowDown className="h-4 w-4 text-wallet-accent" />
+            )}
+            Receive
           </Button>
           <Button 
             variant="outline" 
             size="sm" 
             className="flex items-center gap-1 bg-white/5 hover:bg-white/10"
             onClick={handleSend}
+            disabled={isLoadingSend}
           >
-            <ArrowUp className="h-4 w-4 text-solana" /> Send
+            {isLoadingSend ? (
+              <div className="h-4 w-4 border-2 border-solana border-t-transparent rounded-full animate-spin mr-1"></div>
+            ) : (
+              <ArrowUp className="h-4 w-4 text-solana" />
+            )}
+            Send
           </Button>
         </div>
       </div>
