@@ -1,13 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import WalletOverview from '../components/WalletOverview';
 import TransactionHistory from '../components/TransactionHistory';
 import VoiceInterface from '../components/VoiceInterface';
 import AIAssistant from '../components/AIAssistant';
+import FeatureCard from '../components/FeatureCard';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Wallet, ChevronDown, LogOut, ExternalLink, Copy, Check, X } from 'lucide-react';
+import { 
+  Wallet, ChevronDown, LogOut, ExternalLink, Copy, Check, X,
+  Zap, Shield, ArrowLeftRight, LineChart, Globe, Briefcase, 
+  Gauge, Fingerprint, Award, Sparkles, FileText, Coins, Bank,
+  Lock, Siren, BookOpen, BellRing, Wallet2, Braces, 
+  LayoutDashboard
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +30,7 @@ import {
   DialogClose,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 // Define wallet icons object for reliable access
 const walletIcons = {
@@ -351,6 +358,170 @@ const Dashboard = () => {
             <AIAssistant />
           </div>
         </div>
+
+        {/* Features Showcase Section */}
+        <div className="mt-12">
+          <Card className="border-0 shadow-none bg-transparent">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-2xl font-bold text-gradient">Upcoming Features</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2 pb-6">
+              <p className="text-muted-foreground mb-8">Explore the future of Solana with these upcoming innovations</p>
+              
+              {/* Featured Tools Section */}
+              <div className="mb-10">
+                <h3 className="text-xl font-semibold mb-4 text-foreground/90">Featured Tools</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <FeatureCard 
+                    icon={Zap} 
+                    title="Lightning Transactions" 
+                    description="Send and receive SOL and tokens with unprecedented speed and efficiency."
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={Shield} 
+                    title="Enhanced Security" 
+                    description="Advanced multi-signature wallet protection with biometric authentication."
+                    color="text-wallet-accent" 
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={ArrowLeftRight} 
+                    title="Cross-Chain Bridge" 
+                    description="Seamlessly bridge assets between Solana and other popular blockchains."
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={LineChart} 
+                    title="Portfolio Analytics" 
+                    description="Advanced charting, performance metrics, and visual portfolio insights."
+                    color="text-wallet-accent"
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={Globe} 
+                    title="Global Payments" 
+                    description="Send money internationally with near-zero fees using Solana's network."
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={Briefcase} 
+                    title="Business Accounts" 
+                    description="Specialized wallet features designed for businesses and organizations."
+                    color="text-wallet-accent"
+                    comingSoon={true}
+                  />
+                </div>
+              </div>
+              
+              {/* Wallet Enhancements Section */}
+              <div className="mb-10">
+                <h3 className="text-xl font-semibold mb-4 text-foreground/90">Wallet Enhancements</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <FeatureCard 
+                    icon={Gauge} 
+                    title="Gas Optimizer" 
+                    description="Intelligent fee suggestions to optimize transaction costs based on network conditions."
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={Fingerprint} 
+                    title="Identity Verification" 
+                    description="Simplified KYC and identity management for compliant transactions."
+                    color="text-wallet-accent"
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={Award} 
+                    title="Loyalty Rewards" 
+                    description="Earn rewards for active wallet usage and community participation."
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={Sparkles} 
+                    title="NFT Showcase" 
+                    description="Beautiful gallery to display, organize and show off your NFT collection."
+                    color="text-wallet-accent"
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={FileText} 
+                    title="Smart Receipts" 
+                    description="Automated transaction documentation for personal and business expenses."
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={Coins} 
+                    title="Token Swaps" 
+                    description="Built-in DEX aggregator for optimal token swaps at the best rates."
+                    color="text-wallet-accent"
+                    comingSoon={true}
+                  />
+                </div>
+              </div>
+              
+              {/* Advanced Features Section */}
+              <div>
+                <h3 className="text-xl font-semibold mb-4 text-foreground/90">Advanced Features</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <FeatureCard 
+                    icon={Bank} 
+                    title="Yield Optimizer" 
+                    description="Automatic staking and yield farming to maximize your crypto returns."
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={Lock} 
+                    title="Time-Lock Vaults" 
+                    description="Create time-restricted vaults for controlled asset distribution."
+                    color="text-wallet-accent"
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={Siren} 
+                    title="Price Alerts" 
+                    description="Customizable alerts for token price targets and market conditions."
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={BookOpen} 
+                    title="Tax Reporting" 
+                    description="Comprehensive transaction reports for simplified crypto tax compliance."
+                    color="text-wallet-accent"
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={BellRing} 
+                    title="Smart Notifications" 
+                    description="AI-powered alerts for relevant opportunities in the Solana ecosystem."
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={Wallet2} 
+                    title="Budget Planning" 
+                    description="Set spending limits and financial goals for responsible crypto use."
+                    color="text-wallet-accent"
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={Braces} 
+                    title="Developer Tools" 
+                    description="API access and developer features for building on top of your wallet."
+                    comingSoon={true}
+                  />
+                  <FeatureCard 
+                    icon={LayoutDashboard} 
+                    title="Custom Dashboard" 
+                    description="Fully customizable dashboard layout to display what matters most to you."
+                    color="text-wallet-accent"
+                    comingSoon={true}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
       </div>
     </Layout>;
 };
