@@ -2,6 +2,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume, VolumeX } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { VoiceRecorder } from '@/utils/VoiceRecorder';
+import { 
+  audioBufferToBlob, 
+  blobToBase64, 
+  transcribeAudio, 
+  textToSpeech, 
+  playAudioFromBase64,
+  OPENAI_VOICES
+} from '@/services/voiceAIService';
 
 interface VoiceInterfaceProps {
   onCommand?: (command: string) => void;
@@ -14,19 +23,245 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isBrowserSupported, setIsBrowserSupported] = useState(true);
   const [processingStatus, setProcessingStatus] = useState<'idle' | 'processing' | 'completed' | 'error'>('idle');
+  const [isUsingAI, setIsUsingAI] = useState(true);
   
+  const recorderRef = useRef<VoiceRecorder | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<number | null>(null);
 
-  // Initialize speech recognition
+  // Check browser support
   useEffect(() => {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = 'en-US';
+    // Check if browser supports getUserMedia for our AI voice implementation
+    const checkAIVoiceSupport = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+        setIsBrowserSupported(true);
+        setIsUsingAI(true);
+        return true;
+      } catch (error) {
+        console.log('AI voice recording not supported:', error);
+        return false;
+      }
+    };
+
+    // Check if browser supports SpeechRecognition as a fallback
+    const checkSpeechRecognitionSupport = () => {
+      if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'en-US';
+        return true;
+      }
+      return false;
+    };
+
+    const initVoiceSupport = async () => {
+      const aiSupported = await checkAIVoiceSupport();
       
+      if (!aiSupported) {
+        const speechRecognitionSupported = checkSpeechRecognitionSupport();
+        setIsUsingAI(false);
+        setIsBrowserSupported(speechRecognitionSupported);
+        
+        if (!speechRecognitionSupported) {
+          toast({
+            title: "Voice Commands Limited",
+            description: "Your browser doesn't support speech recognition. Using simulation mode.",
+            variant: "default"
+          });
+        }
+      }
+    };
+
+    initVoiceSupport();
+
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch (e) {
+          console.error("Error stopping recognition:", e);
+        }
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      if (recorderRef.current) {
+        if (recorderRef.current.isActive()) {
+          recorderRef.current.stop();
+        }
+      }
+    };
+  }, []);
+
+  const handleStartListening = () => {
+    console.log('Starting listening process, using AI:', isUsingAI);
+    setIsListening(true);
+    setIsAnimating(true);
+    setCommand('Listening...');
+    setProcessingStatus('idle');
+    
+    if (isUsingAI) {
+      // Use our AI voice implementation
+      if (!recorderRef.current) {
+        recorderRef.current = new VoiceRecorder();
+      }
+      
+      recorderRef.current.start().catch(error => {
+        console.error('Failed to start voice recorder:', error);
+        setIsListening(false);
+        setIsAnimating(false);
+        setProcessingStatus('error');
+        
+        toast({
+          title: "Microphone Access Error",
+          description: "Could not access your microphone. Please check your permissions.",
+          variant: "destructive"
+        });
+        
+        // Fall back to simulation
+        simulateVoiceRecognition();
+      });
+    } else if (recognitionRef.current && isBrowserSupported) {
+      // Use browser's SpeechRecognition as fallback
+      try {
+        recognitionRef.current.start();
+        console.log("Native speech recognition started");
+      } catch (error) {
+        console.error('Recognition start error:', error);
+        try {
+          recognitionRef.current.stop();
+          setTimeout(() => {
+            if (recognitionRef.current) {
+              recognitionRef.current.start();
+              console.log("Voice recognition restarted");
+            }
+          }, 100);
+        } catch (stopError) {
+          console.error('Could not restart recognition:', stopError);
+          simulateVoiceRecognition();
+        }
+      }
+    } else {
+      // Fallback for browsers without any voice support
+      simulateVoiceRecognition();
+    }
+  };
+
+  const handleStopListening = async () => {
+    console.log('Stopping listening process, using AI:', isUsingAI);
+    
+    if (isUsingAI && recorderRef.current) {
+      try {
+        setIsListening(false);
+        setIsAnimating(false);
+        setProcessingStatus('processing');
+        
+        // Get the recorded audio data
+        const audioData = recorderRef.current.stop();
+        
+        // Convert audio data to blob and then to base64
+        const audioBlob = audioBufferToBlob(audioData);
+        const base64Audio = await blobToBase64(audioBlob);
+        
+        // Transcribe the audio using OpenAI
+        console.log('Transcribing audio...');
+        const transcribedText = await transcribeAudio(base64Audio);
+        setCommand(transcribedText);
+        
+        // Process the command
+        if (transcribedText && onCommand) {
+          try {
+            onCommand(transcribedText);
+            setProcessingStatus('completed');
+            
+            // If not muted, provide voice response
+            if (!isMuted) {
+              respondWithVoice(transcribedText);
+            }
+          } catch (error) {
+            console.error('Error processing command:', error);
+            setProcessingStatus('error');
+          }
+        } else {
+          setProcessingStatus('completed');
+        }
+      } catch (error) {
+        console.error('Error in AI voice processing:', error);
+        setProcessingStatus('error');
+        toast({
+          title: "Voice Processing Error",
+          description: "Failed to process your voice command. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } else if (recognitionRef.current && isBrowserSupported) {
+      // Using browser's SpeechRecognition API
+      try {
+        recognitionRef.current.stop();
+        console.log("Native speech recognition stopped");
+      } catch (error) {
+        console.error('Recognition stop error:', error);
+      }
+    } else {
+      // For simulation mode
+      setIsListening(false);
+      setIsAnimating(false);
+      if (command && command !== 'Listening...' && onCommand) {
+        setProcessingStatus('processing');
+        setTimeout(() => {
+          try {
+            onCommand(command);
+            setProcessingStatus('completed');
+          } catch (error) {
+            console.error('Error processing command:', error);
+            setProcessingStatus('error');
+          }
+        }, 500);
+      }
+    }
+  };
+
+  // Voice response using OpenAI's TTS
+  const respondWithVoice = async (userCommand: string) => {
+    try {
+      // Generate an appropriate response based on the command
+      let responseText;
+      
+      const lowerCommand = userCommand.toLowerCase();
+      
+      if (lowerCommand.includes('balance') || lowerCommand.includes('sol')) {
+        responseText = "Your current balance is 243.75 SOL, equivalent to approximately 24,375 dollars.";
+      } else if (lowerCommand.includes('stake') || lowerCommand.includes('staking')) {
+        responseText = "I've prepared a transaction to stake SOL. Please confirm the details on screen.";
+      } else if (lowerCommand.includes('send') || lowerCommand.includes('transfer')) {
+        responseText = "I've prepared a transfer. Please review the recipient and amount on screen.";
+      } else if (lowerCommand.includes('market') || lowerCommand.includes('price')) {
+        responseText = "Solana is currently up 12.5% in the last 24 hours. The overall market sentiment is positive.";
+      } else if (lowerCommand.includes('alert') || lowerCommand.includes('notification')) {
+        responseText = "Price alert set. You'll be notified when SOL reaches your target price.";
+      } else {
+        responseText = "I've processed your command. Is there anything else you'd like to do with your wallet?";
+      }
+      
+      // Convert text to speech
+      console.log('Generating voice response...');
+      const base64Audio = await textToSpeech(responseText, OPENAI_VOICES.NOVA);
+      
+      // Play the response
+      await playAudioFromBase64(base64Audio);
+      
+    } catch (error) {
+      console.error('Error generating voice response:', error);
+    }
+  };
+
+  // Initialize speech recognition events
+  useEffect(() => {
+    if (recognitionRef.current) {
       recognitionRef.current.onstart = () => {
         console.log('Speech recognition started');
         setIsListening(true);
@@ -56,6 +291,11 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
             try {
               onCommand(command);
               setProcessingStatus('completed');
+              
+              // If not muted, provide voice response
+              if (!isMuted) {
+                respondWithVoice(command);
+              }
             } catch (error) {
               console.error('Error processing command:', error);
               setProcessingStatus('error');
@@ -87,93 +327,8 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
           simulateVoiceRecognition();
         }
       };
-    } else {
-      setIsBrowserSupported(false);
-      toast({
-        title: "Voice Commands Limited",
-        description: "Your browser doesn't fully support speech recognition. Using simulation mode.",
-        variant: "default"
-      });
     }
-    
-    return () => {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.abort();
-        } catch (e) {
-          console.error("Error stopping recognition:", e);
-        }
-      }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Send final command when needed
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [command, onCommand]);
-
-  const handleStartListening = () => {
-    console.log('Starting listening process');
-    if (!recognitionRef.current || !isBrowserSupported) {
-      // Fallback for browsers without speech recognition
-      simulateVoiceRecognition();
-      return;
-    }
-    
-    try {
-      recognitionRef.current.start();
-      console.log("Voice recognition started");
-    } catch (error) {
-      console.error('Recognition start error:', error);
-      // If we get an error, try stopping and restarting
-      try {
-        recognitionRef.current.stop();
-        setTimeout(() => {
-          if (recognitionRef.current) {
-            recognitionRef.current.start();
-            console.log("Voice recognition restarted");
-          }
-        }, 100);
-      } catch (stopError) {
-        console.error('Could not restart recognition:', stopError);
-        simulateVoiceRecognition();
-      }
-    }
-  };
-
-  const handleStopListening = () => {
-    console.log('Stopping listening process');
-    if (recognitionRef.current && isBrowserSupported) {
-      try {
-        recognitionRef.current.stop();
-        console.log("Voice recognition stopped");
-      } catch (error) {
-        console.error('Recognition stop error:', error);
-      }
-    } else {
-      setIsListening(false);
-      setIsAnimating(false);
-      if (command && command !== 'Listening...' && onCommand) {
-        setProcessingStatus('processing');
-        setTimeout(() => {
-          try {
-            onCommand(command);
-            setProcessingStatus('completed');
-          } catch (error) {
-            console.error('Error processing command:', error);
-            setProcessingStatus('error');
-          }
-        }, 500);
-      }
-    }
-  };
+  }, [command, onCommand, isMuted]);
 
   // Fallback for browsers without speech recognition
   const simulateVoiceRecognition = () => {
@@ -205,6 +360,11 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
             try {
               onCommand(randomCommand);
               setProcessingStatus('completed');
+              
+              // If not muted, provide voice response
+              if (!isMuted) {
+                respondWithVoice(randomCommand);
+              }
             } catch (error) {
               console.error('Error processing command:', error);
               setProcessingStatus('error');
@@ -263,6 +423,11 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
         try {
           onCommand(randomCommand);
           setProcessingStatus('completed');
+          
+          // If not muted, provide voice response
+          if (!isMuted) {
+            respondWithVoice(randomCommand);
+          }
         } catch (error) {
           console.error('Error processing command:', error);
           setProcessingStatus('error');
@@ -287,13 +452,18 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
     <div className="glass-card p-6 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-medium">Voice Assistant</h3>
-        <button
-          onClick={toggleMute}
-          className="p-2 rounded-full hover:bg-white/10 transition-colors"
-          aria-label={isMuted ? "Unmute" : "Mute"}
-        >
-          {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground bg-white/10 px-2 py-1 rounded">
+            {isUsingAI ? 'AI Voice' : 'Web Speech'}
+          </span>
+          <button
+            onClick={toggleMute}
+            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            aria-label={isMuted ? "Unmute" : "Mute"}
+          >
+            {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
       
       <div className="text-center mb-4">
