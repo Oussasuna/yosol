@@ -33,24 +33,52 @@ serve(async (req) => {
 
     console.log(`Generating speech for text: "${text}" with voice: ${voice || 'alloy'}`);
 
-    // Generate speech from text
-    const response = await fetch('https://api.openai.com/v1/audio/speech', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'tts-1',
-        input: text,
-        voice: voice || 'alloy',
-        response_format: 'mp3',
-      }),
-    });
+    // Generate speech from text with retry logic
+    let response;
+    let retries = 3;
+    
+    while (retries > 0) {
+      try {
+        response = await fetch('https://api.openai.com/v1/audio/speech', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'tts-1',
+            input: text,
+            voice: voice || 'alloy',
+            response_format: 'mp3',
+          }),
+        });
+        
+        if (response.ok) break;
+        
+        const errorText = await response.text();
+        console.error(`OpenAI API error (attempt ${4-retries}): ${errorText}`);
+        retries--;
+        
+        if (retries > 0) {
+          // Wait before retry (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, (4-retries) * 1000));
+        }
+      } catch (fetchError) {
+        console.error(`Fetch error (attempt ${4-retries}):`, fetchError);
+        retries--;
+        
+        if (retries > 0) {
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, (4-retries) * 1000));
+        } else {
+          throw fetchError;
+        }
+      }
+    }
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("OpenAI API error:", errorData);
+    if (!response || !response.ok) {
+      const errorData = response ? await response.json().catch(() => ({})) : {};
+      console.error("OpenAI API error after retries:", errorData);
       throw new Error(errorData.error?.message || 'Failed to generate speech');
     }
 
@@ -73,7 +101,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error in text-to-voice function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "Unknown error occurred" }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
