@@ -54,7 +54,7 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         // Check if already connected
         try {
           // This checks if wallet is already connected
-          if (window.yosol?.solana) {
+          if (typeof window !== 'undefined' && window.yosol?.solana) {
             const connected = await window.yosol.solana.isConnected();
             if (connected) {
               const publicKey = await window.yosol.solana.getPublicKey();
