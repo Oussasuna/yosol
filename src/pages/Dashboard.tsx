@@ -10,8 +10,8 @@ import { Button } from '@/components/ui/button';
 import { 
   Wallet, ChevronDown, LogOut, ExternalLink, Copy, Check, X,
   Zap, Shield, ArrowLeftRight, LineChart, Globe, Briefcase, 
-  Gauge, Fingerprint, Award, Sparkles, FileText, Coins, Bank,
-  Lock, Siren, BookOpen, BellRing, Wallet2, Braces, 
+  Gauge, Fingerprint, Award, Sparkles, FileText, Coins, Building,
+  Lock, Ban, BookOpen, BellRing, Wallet2, Braces, 
   LayoutDashboard
 } from 'lucide-react';
 import {
@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
-// Define wallet icons object for reliable access
 const walletIcons = {
   "Phantom": "https://phantom.app/favicon.ico",
   "Solflare": "https://solflare.com/favicon.ico",
@@ -108,10 +107,9 @@ const Dashboard = () => {
   };
 
   const generateRandomWalletAddress = () => {
-    // Generate a random Solana wallet address (for demo purposes)
     const characters = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
     let result = '';
-    const length = 44; // Typical Solana address length is 44 chars
+    const length = 44;
     
     for (let i = 0; i < length; i++) {
       result += characters.charAt(Math.floor(Math.random() * characters.length));
@@ -131,7 +129,6 @@ const Dashboard = () => {
       variant: "default"
     });
 
-    // Check if wallet extension is available in window
     const walletLowerCase = walletType.toLowerCase().replace(' ', '');
     const hasWallet = typeof window !== 'undefined' && 
                      (window as any)[walletLowerCase];
@@ -359,7 +356,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Features Showcase Section */}
         <div className="mt-12">
           <Card className="border-0 shadow-none bg-transparent">
             <CardHeader className="pb-2">
@@ -368,7 +364,6 @@ const Dashboard = () => {
             <CardContent className="pt-2 pb-6">
               <p className="text-muted-foreground mb-8">Explore the future of Solana with these upcoming innovations</p>
               
-              {/* Featured Tools Section */}
               <div className="mb-10">
                 <h3 className="text-xl font-semibold mb-4 text-foreground/90">Featured Tools</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -414,7 +409,6 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              {/* Wallet Enhancements Section */}
               <div className="mb-10">
                 <h3 className="text-xl font-semibold mb-4 text-foreground/90">Wallet Enhancements</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -460,12 +454,11 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              {/* Advanced Features Section */}
               <div>
                 <h3 className="text-xl font-semibold mb-4 text-foreground/90">Advanced Features</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <FeatureCard 
-                    icon={Bank} 
+                    icon={Building} 
                     title="Yield Optimizer" 
                     description="Automatic staking and yield farming to maximize your crypto returns."
                     comingSoon={true}
@@ -478,7 +471,7 @@ const Dashboard = () => {
                     comingSoon={true}
                   />
                   <FeatureCard 
-                    icon={Siren} 
+                    icon={Ban} 
                     title="Price Alerts" 
                     description="Customizable alerts for token price targets and market conditions."
                     comingSoon={true}
