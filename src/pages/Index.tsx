@@ -90,6 +90,7 @@ const Index = () => {
               description="Send crypto, check prices, and trade just by speaking. Control your wallet with natural voice commands."
               color="text-solana"
               delay={0}
+              comingSoon={false} // Set to false to show this feature as live
             />
             <FeatureCard 
               icon={ShieldAlert}
