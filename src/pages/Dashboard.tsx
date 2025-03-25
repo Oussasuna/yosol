@@ -1,12 +1,18 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import WalletOverview from '../components/WalletOverview';
 import TransactionHistory from '../components/TransactionHistory';
 import VoiceInterface from '../components/VoiceInterface';
 import AIAssistant from '../components/AIAssistant';
+import FeatureCard from '../components/FeatureCard';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Wallet, ChevronDown, LogOut, ExternalLink, Copy, Check, X, TrendingUp, Shield, AlarmClock, Shuffle } from 'lucide-react';
+import { 
+  Wallet, ChevronDown, LogOut, ExternalLink, Copy, Check, X, 
+  TrendingUp, Shield, AlarmClock, Shuffle, Lightbulb, PiggyBank, 
+  Key, Bell, Layers, Globe, FileCode, Network, Lock, Filter
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -366,32 +372,128 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-6">More Features</h2>
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="mt-12">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold">Featured Tools</h2>
+            <Button variant="outline" className="text-solana border-solana hover:bg-solana/10">
+              View All <ChevronDown className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <FeatureCard 
               icon={TrendingUp}
               title="Smart Trading"
               description="AI-powered trading suggestions based on market trends and your portfolio"
-              color="text-solana"
+              delay={0}
             />
             <FeatureCard 
               icon={Shield}
               title="Security Advisor"
               description="Get alerts about suspicious transactions and security recommendations"
               color="text-wallet-accent"
+              delay={1}
             />
             <FeatureCard 
               icon={AlarmClock}
               title="Price Alerts"
               description="Set custom price alerts for tokens in your portfolio"
-              color="text-solana"
+              delay={2}
             />
             <FeatureCard 
               icon={Shuffle}
               title="Auto Swap"
               description="Automatically swap tokens based on market conditions"
               color="text-wallet-accent"
+              delay={3}
+            />
+          </div>
+        </div>
+
+        <div className="mt-12">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold">Wallet Enhancements</h2>
+            <Badge variant="outline" className="bg-gradient-to-r from-solana/20 to-wallet-accent/20 backdrop-blur-sm border-white/10 text-white px-3 py-1">
+              Premium
+            </Badge>
+          </div>
+          
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <FeatureCard 
+              icon={Lightbulb}
+              title="Smart Insights"
+              description="Get personalized investment insights based on your portfolio and market trends"
+              delay={0}
+            />
+            <FeatureCard 
+              icon={PiggyBank}
+              title="Yield Optimizer"
+              description="Automatically find and suggest the best yield opportunities for your assets"
+              color="text-wallet-accent"
+              delay={1}
+            />
+            <FeatureCard 
+              icon={Key}
+              title="Multi-sig Vault"
+              description="Create secure multi-signature vaults for your most valuable assets"
+              delay={2}
+            />
+          </div>
+        </div>
+
+        <div className="mt-12">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold">Advanced Features</h2>
+            <Button variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+              Beta Access
+            </Button>
+          </div>
+          
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+            <FeatureCard 
+              icon={Bell}
+              title="Smart Notifications"
+              description="Receive personalized alerts for important events like price movements, airdrops, and security threats"
+              delay={0}
+            />
+            <FeatureCard 
+              icon={Layers}
+              title="Portfolio Analyzer"
+              description="Deep insights into your portfolio performance with advanced analytics and visualization tools"
+              color="text-wallet-accent"
+              delay={1}
+            />
+            <FeatureCard 
+              icon={Globe}
+              title="Cross-chain Bridge"
+              description="Seamlessly move assets between Solana and other blockchains with integrated bridge functionality"
+              delay={2}
+            />
+            <FeatureCard 
+              icon={FileCode}
+              title="Developer Tools"
+              description="Access to advanced tools for developers to build and test applications on Solana"
+              color="text-wallet-accent"
+              delay={3}
+            />
+            <FeatureCard 
+              icon={Network}
+              title="Decentralized Identity"
+              description="Manage your Web3 identity and credentials across the Solana ecosystem"
+              delay={4}
+            />
+            <FeatureCard 
+              icon={Lock}
+              title="Enhanced Security"
+              description="Additional security features including biometric authentication and hardware wallet integration"
+              color="text-wallet-accent"
+              delay={5}
+            />
+            <FeatureCard 
+              icon={Filter}
+              title="Tax & Reporting"
+              description="Automated tax calculations and reporting for all your crypto transactions"
+              delay={6}
             />
           </div>
         </div>
