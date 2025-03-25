@@ -1,16 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowUp, ArrowDown, Wallet, AlertCircle } from 'lucide-react';
+import { ArrowUp, ArrowDown, Wallet, AlertCircle, Loader2 } from 'lucide-react';
+import { usePhantomWallet } from './PhantomWalletProvider';
 
-interface Transaction {
-  id: string;
-  type: 'send' | 'receive' | 'swap';
-  amount: string;
-  to?: string;
-  from?: string;
-  token?: string;
-  date: string;
-  status: 'completed' | 'pending' | 'failed';
+interface TransactionHistoryProps {
+  walletConnected?: boolean;
+  walletAddress?: string | null;
 }
 
 const formatDate = (dateString: string) => {
@@ -23,85 +18,39 @@ const formatDate = (dateString: string) => {
   }).format(date);
 };
 
-interface TransactionHistoryProps {
-  walletConnected?: boolean;
-  walletAddress?: string | null;
-}
-
 const TransactionHistory: React.FC<TransactionHistoryProps> = ({ 
-  walletConnected = false, 
-  walletAddress = null 
+  walletConnected: propWalletConnected = false, 
+  walletAddress: propWalletAddress = null 
 }) => {
+  const { 
+    walletConnected: contextWalletConnected,
+    walletAddress: contextWalletAddress,
+    recentTransactions: contextTransactions,
+    isLoading: contextIsLoading
+  } = usePhantomWallet();
+  
+  // Use props if provided, otherwise fall back to context values
+  const walletConnected = propWalletConnected !== undefined ? propWalletConnected : contextWalletConnected;
+  const walletAddress = propWalletAddress !== null ? propWalletAddress : contextWalletAddress;
+  const transactions = contextTransactions || [];
+  const isLoading = contextIsLoading;
+  
   const [animatedItems, setAnimatedItems] = useState<string[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (walletConnected && walletAddress) {
-      setIsLoading(true);
-      
-      // In a real implementation, this would call a blockchain API with the wallet address
-      // For demonstration, we'll simulate fetching transactions based on the wallet address
-      const fetchTransactions = async () => {
-        try {
-          console.log(`Fetching transactions for wallet: ${walletAddress}`);
-          
-          // Simulate API call delay
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          
-          // Generate some pseudo-random transactions based on the wallet address
-          // In a real app, this would be replaced with actual blockchain API calls
-          const lastDigit = walletAddress.slice(-1);
-          const transactionCount = (parseInt(lastDigit, 16) % 5) + 2; // 2-6 transactions
-          
-          const types = ['send', 'receive', 'swap'];
-          const newTransactions: Transaction[] = [];
-          
-          for (let i = 0; i < transactionCount; i++) {
-            const typeIndex = (parseInt(walletAddress.slice(i, i+2) || '0', 16) % 3);
-            const type = types[typeIndex] as 'send' | 'receive' | 'swap';
-            
-            const amount = ((parseInt(walletAddress.slice(i*2, i*2+2) || '10', 16) % 20) + 1).toFixed(2);
-            const daysAgo = (parseInt(walletAddress.slice(-i-2, -i) || '1', 16) % 10);
-            const date = new Date();
-            date.setDate(date.getDate() - daysAgo);
-            
-            newTransactions.push({
-              id: `tx-${walletAddress.slice(0, 6)}-${i}`,
-              type,
-              amount,
-              ...(type === 'send' ? { to: `${walletAddress.slice(0, 2)}...${walletAddress.slice(-4)}` } : {}),
-              ...(type === 'receive' ? { from: `${walletAddress.slice(-4, -2)}...${walletAddress.slice(2, 4)}` } : {}),
-              ...(type === 'swap' ? { token: 'USDC' } : {}),
-              date: date.toISOString(),
-              status: 'completed'
-            });
-          }
-          
-          setTransactions(newTransactions);
-          setIsLoading(false);
-          
-          // Animate items after they're loaded
-          const ids = newTransactions.map(tx => tx.id);
-          setAnimatedItems(ids);
-          
-        } catch (error) {
-          console.error("Error fetching transactions:", error);
-          setIsLoading(false);
-        }
-      };
-      
-      fetchTransactions();
-    } else {
-      // Reset transactions when wallet disconnects
-      setTransactions([]);
-      setAnimatedItems([]);
+    setIsVisible(true);
+    
+    // Animate items after they're loaded
+    if (transactions.length > 0) {
+      const ids = transactions.map(tx => tx.id);
+      setAnimatedItems(ids);
     }
-  }, [walletConnected, walletAddress]);
+  }, [transactions]);
 
   if (!walletConnected) {
     return (
-      <div className="glass-card p-6 animate-fade-in">
+      <div className={`glass-card p-6 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>
         <div className="flex flex-col items-center justify-center py-10 text-center">
           <AlertCircle className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
@@ -113,12 +62,12 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   }
 
   return (
-    <div className="glass-card p-6 animate-fade-in">
+    <div className={`glass-card p-6 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
       <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>
       
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-10">
-          <div className="h-8 w-8 rounded-full border-2 border-solana border-t-transparent animate-spin mb-4"></div>
+          <Loader2 className="h-8 w-8 animate-spin text-wallet-accent mb-4" />
           <p className="text-muted-foreground">Loading your transactions...</p>
         </div>
       ) : transactions.length > 0 ? (
