@@ -3,9 +3,9 @@ import React, { useEffect, useRef } from 'react';
 import Layout from '../components/Layout';
 import HeroSection from '../components/HeroSection';
 import FeatureCard from '../components/FeatureCard';
-import Roadmap from '../components/Roadmap'; // Import the Roadmap component
+import Roadmap from '../components/Roadmap';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Shield, TrendingUp, Wallet, ArrowRight, Zap, Cloud, Mic, ShieldAlert, AlarmClock } from 'lucide-react';
+import { MessageCircle, Shield, TrendingUp, Wallet, ArrowRight, Zap, Cloud, Mic } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
@@ -58,7 +58,7 @@ const Index = () => {
       <div className="absolute top-[30%] left-[10%] w-64 h-64 rounded-full bg-solana/5 blur-3xl animate-pulse-light"></div>
       <div className="absolute top-[40%] right-[15%] w-80 h-80 rounded-full bg-wallet-accent/5 blur-3xl animate-pulse-light" style={{ animationDelay: "1s" }}></div>
       
-      {/* Features Section with 3D Cards */}
+      {/* Core Features Section - Simplified and focused on what's available now */}
       <section id="features" className="py-20 relative overflow-hidden">
         <motion.div 
           className="absolute -top-[300px] -right-[300px] w-[600px] h-[600px] rounded-full bg-solana/10 blur-3xl opacity-50 z-0"
@@ -89,44 +89,30 @@ const Index = () => {
               title="Talk to Your Wallet"
               description="Send crypto, check prices, and trade just by speaking. Control your wallet with natural voice commands."
               color="text-solana"
-              delay={0}
-              comingSoon={false} // Set to false to show this feature as live
+              animationDelay={0}
             />
             <FeatureCard 
-              icon={ShieldAlert}
+              icon={Shield}
               title="AI Safety Check"
               description="Warns you before risky transactions or scams. Intelligent monitoring flags suspicious activity before you confirm."
-              color="text-wallet-accent"
-              delay={1}
+              color="text-wallet-accent" 
+              animationDelay={1}
             />
             <FeatureCard 
               icon={TrendingUp}
               title="Auto Money Grow"
               description="Stakes, swaps, and invests for you with voice commands. Get real-time market analysis and personalized investment suggestions."
               color="text-solana"
-              delay={2}
+              animationDelay={2}
             />
-            <FeatureCard 
-              icon={AlarmClock}
-              title="Crypto Alarm"
-              description="Alerts you when prices hit your target or something fishy happens. Stay on top of market movements without constant monitoring."
-              color="text-wallet-accent"
-              delay={3}
-            />
-            <FeatureCard 
-              icon={Wallet}
-              title="Smart Portfolio"
-              description="AI-powered portfolio management that optimizes your assets automatically."
-              color="text-solana"
-              delay={4}
-            />
-            <FeatureCard 
-              icon={Cloud}
-              title="Conversational AI"
-              description="Ask questions about your finances, set goals, and get personalized advice."
-              color="text-wallet-accent"
-              delay={5}
-            />
+          </div>
+          
+          <div className="mt-16 text-center">
+            <Link to="/dashboard">
+              <Button className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90 transition-opacity duration-300 gap-2 group">
+                See All Features <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

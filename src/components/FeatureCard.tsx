@@ -10,6 +10,7 @@ interface FeatureCardProps {
   description: string;
   color?: string;
   comingSoon?: boolean;
+  animationDelay?: number;
 }
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ 
@@ -17,7 +18,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
   title, 
   description,
   color = "text-solana",
-  comingSoon = false
+  comingSoon = false,
+  animationDelay = 0
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -26,7 +28,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
       className="glass-card p-6 overflow-hidden relative group"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.5, delay: animationDelay * 0.1 }}
       whileHover={{ 
         y: -8,
         transition: { duration: 0.2 }
