@@ -19,6 +19,8 @@ const AIAssistant: React.FC = () => {
   const [userInput, setUserInput] = useState('');
   const [processingQuery, setProcessingQuery] = useState(false);
   const [insights, setInsights] = useState<AIInsight[]>([]);
+  const [lastQuery, setLastQuery] = useState<string | null>(null);
+  const [lastResponse, setLastResponse] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Define insights with handlers
@@ -111,6 +113,7 @@ const AIAssistant: React.FC = () => {
     if (!userInput.trim()) return;
     
     setProcessingQuery(true);
+    setLastQuery(userInput);
     
     // Simulate AI processing
     toast({
@@ -118,11 +121,12 @@ const AIAssistant: React.FC = () => {
       description: `Analyzing: "${userInput}"`,
     });
     
-    // Simulate response time
+    // Simulate typing effect for more realistic AI response
     setTimeout(() => {
       setProcessingQuery(false);
       
       const response = getAIResponse(userInput);
+      setLastResponse(response);
       setUserInput('');
       
       toast({
@@ -135,20 +139,27 @@ const AIAssistant: React.FC = () => {
   const getAIResponse = (query: string): string => {
     const lowerQuery = query.toLowerCase();
     
+    // Enhanced responses with more specific information
     if (lowerQuery.includes('price') || lowerQuery.includes('sol') || lowerQuery.includes('worth')) {
-      return "Current SOL price is $100.00, up 12.5% in the last 24 hours.";
+      return "Current SOL price is $100.00, up 12.5% in the last 24 hours. Trading volume has increased by 32% in the past week, suggesting strong market interest.";
     } else if (lowerQuery.includes('stake') || lowerQuery.includes('reward')) {
-      return "Your staking rewards are currently 0.42 SOL per day with an APY of 6.8%.";
+      return "Your staking rewards are currently 0.42 SOL per day with an APY of 6.8%. Based on your current stake of 125 SOL, you'll earn approximately 8.5 SOL per month at current rates.";
     } else if (lowerQuery.includes('nft') || lowerQuery.includes('collection')) {
-      return "You own 7 NFTs across 3 collections. The floor price of your collections has increased by 5% this week.";
+      return "You own 7 NFTs across 3 collections. The floor price of your collections has increased by 5% this week. One of your NFTs is now worth approximately 12 SOL based on recent sales.";
     } else if (lowerQuery.includes('transaction') || lowerQuery.includes('history')) {
-      return "You've made 143 transactions in total. Your most recent was a SOL transfer 2 days ago.";
+      return "You've made 143 transactions in total. Your most recent was a SOL transfer 2 days ago. In the past month, you've conducted 28 transactions, primarily token swaps and transfers.";
     } else if (lowerQuery.includes('wallet') || lowerQuery.includes('connect')) {
-      return "To connect your wallet, click the 'Connect Wallet' button at the top of the dashboard.";
+      return "To connect your wallet, click the 'Connect Wallet' button at the top of the dashboard. We support multiple Solana wallets including Phantom, Solflare, and Magic Eden.";
     } else if (lowerQuery.includes('token') || lowerQuery.includes('spl')) {
-      return "You have 5 SPL tokens in your wallet. The most valuable is worth approximately $120.";
+      return "You have 5 SPL tokens in your wallet. The most valuable is worth approximately $120. Your token portfolio has grown by 15% in the past 30 days based on market movements.";
+    } else if (lowerQuery.includes('security') || lowerQuery.includes('protect')) {
+      return "Your wallet is protected with standard security measures. For enhanced security, consider enabling multi-factor authentication if your wallet provider supports it and never share your seed phrase.";
+    } else if (lowerQuery.includes('market') || lowerQuery.includes('trend')) {
+      return "Solana has shown positive momentum over the past week, with increasing developer activity and network usage. Trading volume is up 27% and total value locked has increased by 15%.";
+    } else if (lowerQuery.includes('help') || lowerQuery.includes('guide')) {
+      return "I can help with SOL prices, staking information, portfolio analysis, market trends, and wallet management. Try asking specific questions about your wallet or the Solana ecosystem.";
     } else {
-      return "I'm your Solana AI assistant. I can help with SOL prices, staking info, transaction history, and wallet management.";
+      return "I'm your Solana AI assistant. I can help with SOL prices, staking info, transaction history, NFT valuations, and wallet management. What would you like to know about your wallet or the Solana ecosystem?";
     }
   };
 
@@ -208,6 +219,19 @@ const AIAssistant: React.FC = () => {
         ))}
       </div>
       
+      {/* Last response display */}
+      {lastQuery && lastResponse && (
+        <div className="mt-4 mb-4 bg-white/5 p-3 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="bg-white/10 p-1 rounded-full">
+              <Bot className="h-3 w-3 text-solana" />
+            </div>
+            <p className="text-xs text-muted-foreground">Last query: "{lastQuery}"</p>
+          </div>
+          <p className="text-sm">{lastResponse}</p>
+        </div>
+      )}
+      
       <form onSubmit={handleAskAI} className="mt-6 pt-4 border-t border-white/10">
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -231,7 +255,7 @@ const AIAssistant: React.FC = () => {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-3">
-          Try: "SOL price" • "My staking rewards" • "NFT value"
+          Try: "SOL price" • "My staking rewards" • "NFT value" • "Security tips"
         </p>
       </form>
     </div>

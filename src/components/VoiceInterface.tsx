@@ -13,6 +13,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isBrowserSupported, setIsBrowserSupported] = useState(true);
+  const [processingStatus, setProcessingStatus] = useState<'idle' | 'processing' | 'completed' | 'error'>('idle');
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<number | null>(null);
@@ -31,6 +32,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
         setIsListening(true);
         setIsAnimating(true);
         setCommand('Listening...');
+        setProcessingStatus('idle');
       };
       
       recognitionRef.current.onresult = (event) => {
@@ -45,17 +47,28 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       
       recognitionRef.current.onend = () => {
         console.log('Speech recognition ended');
-        if (command && command !== 'Listening...' && onCommand) {
-          onCommand(command);
-        }
         setIsListening(false);
         setIsAnimating(false);
+        
+        if (command && command !== 'Listening...' && onCommand) {
+          setProcessingStatus('processing');
+          setTimeout(() => {
+            try {
+              onCommand(command);
+              setProcessingStatus('completed');
+            } catch (error) {
+              console.error('Error processing command:', error);
+              setProcessingStatus('error');
+            }
+          }, 500);
+        }
       };
       
       recognitionRef.current.onerror = (event) => {
         console.error('Speech recognition error', event.error);
         setIsListening(false);
         setIsAnimating(false);
+        setProcessingStatus('error');
         
         toast({
           title: "Voice Recognition Error",
@@ -148,7 +161,16 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       setIsListening(false);
       setIsAnimating(false);
       if (command && command !== 'Listening...' && onCommand) {
-        onCommand(command);
+        setProcessingStatus('processing');
+        setTimeout(() => {
+          try {
+            onCommand(command);
+            setProcessingStatus('completed');
+          } catch (error) {
+            console.error('Error processing command:', error);
+            setProcessingStatus('error');
+          }
+        }, 500);
       }
     }
   };
@@ -159,6 +181,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
     setIsListening(true);
     setIsAnimating(true);
     setCommand('Listening...');
+    setProcessingStatus('idle');
     
     // Simulate delay for listening
     timeoutRef.current = window.setTimeout(() => {
@@ -175,10 +198,20 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       timeoutRef.current = window.setTimeout(() => {
         setIsListening(false);
         setIsAnimating(false);
-        if (onCommand) {
-          onCommand(randomCommand);
-        }
-      }, 1000);
+        setProcessingStatus('processing');
+        
+        setTimeout(() => {
+          if (onCommand) {
+            try {
+              onCommand(randomCommand);
+              setProcessingStatus('completed');
+            } catch (error) {
+              console.error('Error processing command:', error);
+              setProcessingStatus('error');
+            }
+          }
+        }, 1000);
+      }, 1500);
     }, 1500);
   };
 
@@ -225,10 +258,29 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
     setCommand(randomCommand);
     
     if (onCommand) {
+      setProcessingStatus('processing');
       setTimeout(() => {
-        onCommand(randomCommand);
+        try {
+          onCommand(randomCommand);
+          setProcessingStatus('completed');
+        } catch (error) {
+          console.error('Error processing command:', error);
+          setProcessingStatus('error');
+        }
       }, 500);
     }
+  };
+
+  const getStatusIndicator = () => {
+    if (processingStatus === 'idle') return null;
+    
+    return (
+      <div className={`absolute top-0 right-0 m-1 p-1 rounded-full ${
+        processingStatus === 'processing' ? 'bg-yellow-500' :
+        processingStatus === 'completed' ? 'bg-green-500' :
+        'bg-red-500'
+      }`} style={{ width: '12px', height: '12px' }}></div>
+    );
   };
 
   return (
@@ -286,16 +338,31 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
                 isListening ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />
               )}
             </div>
+            {getStatusIndicator()}
           </button>
         </div>
       </div>
       
       {command && (
-        <div className={`bg-white/5 p-4 rounded-lg animate-fade-in transition-opacity duration-300 ${command === 'Listening...' ? 'opacity-70' : 'opacity-100'}`}>
+        <div className={`bg-white/5 p-4 rounded-lg animate-fade-in transition-opacity duration-300 ${
+          command === 'Listening...' ? 'opacity-70' : 'opacity-100'
+        }`}>
           <p className="text-sm text-muted-foreground mb-1">
             {command === 'Listening...' ? 'Listening...' : 'Recognized command:'}
           </p>
           <p className="text-white">{command === 'Listening...' ? '' : command}</p>
+          {processingStatus === 'processing' && (
+            <div className="mt-2 flex items-center">
+              <div className="h-4 w-4 rounded-full border-2 border-solana border-t-transparent animate-spin mr-2"></div>
+              <span className="text-xs text-muted-foreground">Processing command...</span>
+            </div>
+          )}
+          {processingStatus === 'completed' && (
+            <p className="text-xs text-green-400 mt-2">Command executed successfully</p>
+          )}
+          {processingStatus === 'error' && (
+            <p className="text-xs text-red-400 mt-2">Error executing command</p>
+          )}
         </div>
       )}
 

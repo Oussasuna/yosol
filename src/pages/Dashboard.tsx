@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import WalletOverview from '../components/WalletOverview';
@@ -12,7 +13,7 @@ import {
   Zap, Shield, ArrowLeftRight, LineChart, Globe, Briefcase, 
   Gauge, Fingerprint, Award, Sparkles, FileText, Coins, Building,
   Lock, Ban, BookOpen, BellRing, Wallet2, Braces, 
-  LayoutDashboard
+  LayoutDashboard, AlertCircle
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -29,6 +30,7 @@ import {
   DialogTrigger,
   DialogClose,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -51,59 +53,155 @@ const Dashboard = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [showWalletDialog, setShowWalletDialog] = useState(false);
+  const [walletConnectionError, setWalletConnectionError] = useState<string | null>(null);
+  const [processingTransaction, setProcessingTransaction] = useState<boolean>(false);
+  const [transactionConfirmData, setTransactionConfirmData] = useState<{
+    amount?: number;
+    recipient?: string;
+    type: 'send' | 'stake' | 'swap';
+  } | null>(null);
   
   const handleVoiceCommand = (command: string) => {
     setLastCommand(command);
     console.log("Voice command received:", command);
 
     const lowerCommand = command.toLowerCase();
-    if (lowerCommand.includes('send')) {
-      toast({
-        title: "Transaction Initiated",
-        description: "Voice command processed: Preparing to send tokens. Please confirm the transaction details.",
-        variant: "default"
-      });
-    } else if (lowerCommand.includes('balance') || lowerCommand.includes('check')) {
-      toast({
-        title: "Balance Request",
-        description: "Your current balance is 243.75 SOL (≈ $24,375.00)",
-        variant: "default"
-      });
-    } else if (lowerCommand.includes('market') || lowerCommand.includes('price') || lowerCommand.includes('insight')) {
-      toast({
-        title: "Market Insights",
-        description: "Solana is up 12.5% in the last 24 hours. The overall market sentiment is positive.",
-        variant: "default"
-      });
-    } else if (lowerCommand.includes('stake') || lowerCommand.includes('staking')) {
-      toast({
-        title: "Staking Information",
-        description: "Your current staking rewards are 0.42 SOL per day. Total staked: 125 SOL.",
-        variant: "default"
-      });
-    } else if (lowerCommand.includes('alert') || lowerCommand.includes('notification')) {
-      toast({
-        title: "Price Alert Set",
-        description: "We'll notify you when SOL reaches your target price.",
-        variant: "default"
-      });
-    } else if (lowerCommand.includes('wallet') && lowerCommand.includes('connect')) {
+    
+    // Process wallet connection command
+    if (lowerCommand.includes('wallet') && lowerCommand.includes('connect')) {
       if (!walletConnected) {
-        connectWallet("Phantom");
+        setShowWalletDialog(true);
+        toast({
+          title: "Wallet Connection",
+          description: "Please select a wallet provider to connect with.",
+          variant: "default"
+        });
+        return;
       } else {
         toast({
           title: "Wallet Already Connected",
           description: "Your wallet is already connected to the application.",
           variant: "default"
         });
+        return;
       }
-    } else {
+    }
+    
+    // Process send command
+    if (lowerCommand.includes('send')) {
+      if (!walletConnected) {
+        toast({
+          title: "Wallet Not Connected",
+          description: "Please connect your wallet first to send transactions.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const amountMatch = lowerCommand.match(/\d+(\.\d+)?/);
+      let amount = 1; // Default amount
+      if (amountMatch) {
+        amount = parseFloat(amountMatch[0]);
+      }
+      
+      // Try to extract a recipient address
+      const recipient = generateRandomWalletAddress().slice(0, 6) + "..." + generateRandomWalletAddress().slice(-4);
+      
+      setTransactionConfirmData({
+        amount: amount,
+        recipient: recipient,
+        type: 'send'
+      });
+      
       toast({
-        title: "Processing Command",
-        description: `Analyzing: "${command}"`,
+        title: "Transaction Prepared",
+        description: `Preparing to send ${amount} SOL to ${recipient}. Please confirm the transaction.`,
         variant: "default"
       });
+      return;
     }
+    
+    // Process balance check
+    if (lowerCommand.includes('balance') || (lowerCommand.includes('check') && lowerCommand.includes('sol'))) {
+      if (!walletConnected) {
+        toast({
+          title: "Wallet Not Connected",
+          description: "Please connect your wallet first to check your balance.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      toast({
+        title: "Balance Information",
+        description: "Your current balance is 243.75 SOL (≈ $24,375.00)",
+        variant: "default"
+      });
+      return;
+    }
+    
+    // Process market/price check
+    if (lowerCommand.includes('market') || lowerCommand.includes('price') || lowerCommand.includes('insight')) {
+      toast({
+        title: "Market Insights",
+        description: "Solana is up 12.5% in the last 24 hours. The overall market sentiment is positive.",
+        variant: "default"
+      });
+      return;
+    }
+    
+    // Process staking command
+    if (lowerCommand.includes('stake') || lowerCommand.includes('staking')) {
+      if (!walletConnected) {
+        toast({
+          title: "Wallet Not Connected",
+          description: "Please connect your wallet first to manage staking.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const amountMatch = lowerCommand.match(/\d+(\.\d+)?/);
+      let amount = 10; // Default amount
+      if (amountMatch) {
+        amount = parseFloat(amountMatch[0]);
+      }
+      
+      setTransactionConfirmData({
+        amount: amount,
+        type: 'stake'
+      });
+      
+      toast({
+        title: "Staking Prepared",
+        description: `Preparing to stake ${amount} SOL. Please confirm the transaction.`,
+        variant: "default"
+      });
+      return;
+    }
+    
+    // Process alert setup
+    if (lowerCommand.includes('alert') || lowerCommand.includes('notification')) {
+      const priceMatch = lowerCommand.match(/\$?\d+(\.\d+)?/);
+      let price = 150; // Default price
+      if (priceMatch) {
+        price = parseFloat(priceMatch[0].replace('$', ''));
+      }
+      
+      toast({
+        title: "Price Alert Set",
+        description: `You will be notified when SOL reaches $${price.toFixed(2)}.`,
+        variant: "default"
+      });
+      return;
+    }
+    
+    // Unknown or general command
+    toast({
+      title: "Command Processed",
+      description: `I understood: "${command}". How else can I assist you?`,
+      variant: "default"
+    });
   };
 
   const generateRandomWalletAddress = () => {
@@ -122,6 +220,7 @@ const Dashboard = () => {
     if (isConnecting) return;
     
     setIsConnecting(true);
+    setWalletConnectionError(null);
     
     toast({
       title: `Connecting ${walletType}`,
@@ -135,21 +234,39 @@ const Dashboard = () => {
     
     console.log(`Attempting to connect to ${walletType}. Available in window:`, hasWallet);
 
+    // Simulate wallet connection
     setTimeout(() => {
-      const randomAddress = generateRandomWalletAddress();
-      console.log(`Connected to wallet with address: ${randomAddress}`);
-      
-      setWalletAddress(randomAddress);
-      setWalletConnected(true);
-      setConnectedWalletType(walletType);
-      setIsConnecting(false);
-      setShowWalletDialog(false);
-      
-      toast({
-        title: "Wallet Connected",
-        description: `Your ${walletType} wallet has been successfully connected.`,
-        variant: "default"
-      });
+      try {
+        // Simulate a 10% chance of connection error for realism
+        if (Math.random() < 0.1) {
+          throw new Error("Connection timeout. Please try again.");
+        }
+        
+        const randomAddress = generateRandomWalletAddress();
+        console.log(`Connected to wallet with address: ${randomAddress}`);
+        
+        setWalletAddress(randomAddress);
+        setWalletConnected(true);
+        setConnectedWalletType(walletType);
+        setIsConnecting(false);
+        setShowWalletDialog(false);
+        
+        toast({
+          title: "Wallet Connected",
+          description: `Your ${walletType} wallet has been successfully connected.`,
+          variant: "default"
+        });
+      } catch (error) {
+        console.error("Wallet connection error:", error);
+        setIsConnecting(false);
+        setWalletConnectionError(error instanceof Error ? error.message : "Unknown error occurred");
+        
+        toast({
+          title: "Connection Failed",
+          description: error instanceof Error ? error.message : "Failed to connect wallet. Please try again.",
+          variant: "destructive"
+        });
+      }
     }, 1500);
   };
 
@@ -162,6 +279,7 @@ const Dashboard = () => {
     setWalletConnected(false);
     setConnectedWalletType(null);
     setWalletAddress(null);
+    setTransactionConfirmData(null);
   };
 
   const copyWalletAddress = () => {
@@ -209,9 +327,19 @@ const Dashboard = () => {
   };
 
   const handleSend = () => {
-    toast({
-      title: "Send Transaction",
-      description: "Please complete the form to send SOL or tokens to another wallet.",
+    if (!walletConnected) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your wallet first to send transactions.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setTransactionConfirmData({
+      amount: 1,
+      recipient: shortenAddress(generateRandomWalletAddress()),
+      type: 'send'
     });
   };
 
@@ -223,6 +351,48 @@ const Dashboard = () => {
         description: "Your wallet address has been copied. Share it to receive SOL or tokens.",
       });
     }
+  };
+  
+  const confirmTransaction = () => {
+    if (!transactionConfirmData) return;
+    
+    setProcessingTransaction(true);
+    
+    // Simulate transaction processing
+    setTimeout(() => {
+      setProcessingTransaction(false);
+      setTransactionConfirmData(null);
+      
+      // Success toast based on transaction type
+      if (transactionConfirmData.type === 'send') {
+        toast({
+          title: "Transaction Successful",
+          description: `Successfully sent ${transactionConfirmData.amount} SOL to ${transactionConfirmData.recipient}.`,
+          variant: "default"
+        });
+      } else if (transactionConfirmData.type === 'stake') {
+        toast({
+          title: "Staking Successful",
+          description: `Successfully staked ${transactionConfirmData.amount} SOL. You will start earning rewards soon.`,
+          variant: "default"
+        });
+      } else if (transactionConfirmData.type === 'swap') {
+        toast({
+          title: "Swap Successful",
+          description: `Successfully swapped ${transactionConfirmData.amount} SOL.`,
+          variant: "default"
+        });
+      }
+    }, 2000);
+  };
+  
+  const cancelTransaction = () => {
+    setTransactionConfirmData(null);
+    toast({
+      title: "Transaction Cancelled",
+      description: "The transaction has been cancelled.",
+      variant: "default"
+    });
   };
 
   const walletOptions = [
@@ -265,6 +435,12 @@ const Dashboard = () => {
                   </DialogClose>
                 </div>
                 <div className="bg-gradient-to-b from-[#5846f9]/20 to-[#1de9b6]/20 backdrop-blur-sm">
+                  {walletConnectionError && (
+                    <div className="p-3 m-3 bg-red-500/20 rounded-md flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-red-400" />
+                      <p className="text-sm text-red-200">{walletConnectionError}</p>
+                    </div>
+                  )}
                   {walletOptions.map((wallet) => (
                     <div 
                       key={wallet.name}
@@ -328,6 +504,63 @@ const Dashboard = () => {
             </DropdownMenu>
           )}
         </div>
+        
+        {/* Transaction Confirmation Dialog */}
+        {transactionConfirmData && (
+          <Dialog open={!!transactionConfirmData} onOpenChange={(open) => !open && cancelTransaction()}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Confirm Transaction</DialogTitle>
+                <DialogDescription>
+                  {transactionConfirmData.type === 'send' && `Send ${transactionConfirmData.amount} SOL to ${transactionConfirmData.recipient}`}
+                  {transactionConfirmData.type === 'stake' && `Stake ${transactionConfirmData.amount} SOL for rewards`}
+                  {transactionConfirmData.type === 'swap' && `Swap ${transactionConfirmData.amount} SOL`}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="p-4 bg-white/5 rounded-md my-4">
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">Amount</span>
+                  <span className="text-sm font-medium">{transactionConfirmData.amount} SOL</span>
+                </div>
+                {transactionConfirmData.type === 'send' && (
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm text-muted-foreground">To</span>
+                    <span className="text-sm font-medium">{transactionConfirmData.recipient}</span>
+                  </div>
+                )}
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">Fee</span>
+                  <span className="text-sm font-medium">0.000005 SOL</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-white/10">
+                  <span className="text-sm font-medium">Total</span>
+                  <span className="text-sm font-medium">{(Number(transactionConfirmData.amount) + 0.000005).toFixed(6)} SOL</span>
+                </div>
+              </div>
+              
+              <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-2">
+                <Button variant="outline" onClick={cancelTransaction} disabled={processingTransaction}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={confirmTransaction} 
+                  className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90" 
+                  disabled={processingTransaction}
+                >
+                  {processingTransaction ? (
+                    <>
+                      <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin mr-2"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    'Confirm'
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
         
         <div className="grid gap-6 md:grid-cols-3">
           <div className="md:col-span-2">
