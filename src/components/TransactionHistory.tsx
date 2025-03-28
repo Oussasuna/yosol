@@ -1,7 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowUp, ArrowDown, Wallet, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowUp, ArrowDown, Wallet, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { usePhantomWallet } from './PhantomWalletProvider';
+import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
 
 interface TransactionHistoryProps {
   walletConnected?: boolean;
@@ -26,7 +28,8 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     walletConnected: contextWalletConnected,
     walletAddress: contextWalletAddress,
     recentTransactions: contextTransactions,
-    isLoading: contextIsLoading
+    isLoading: contextIsLoading,
+    refreshWalletData
   } = usePhantomWallet();
   
   // Use props if provided, otherwise fall back to context values
@@ -37,6 +40,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   
   const [animatedItems, setAnimatedItems] = useState<string[]>([]);
   const [isVisible, setIsVisible] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
@@ -47,6 +51,44 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       setAnimatedItems(ids);
     }
   }, [transactions]);
+
+  // Auto-refresh transaction data every 30 seconds if wallet is connected
+  useEffect(() => {
+    if (!walletConnected) return;
+    
+    const refreshInterval = setInterval(() => {
+      if (refreshWalletData) {
+        console.log('Auto-refreshing wallet transaction data');
+        refreshWalletData();
+      }
+    }, 30000);
+    
+    return () => clearInterval(refreshInterval);
+  }, [walletConnected, refreshWalletData]);
+
+  const handleManualRefresh = () => {
+    if (!refreshWalletData) return;
+    
+    setIsRefreshing(true);
+    refreshWalletData()
+      .then(() => {
+        toast({
+          title: "Data Refreshed",
+          description: "Transaction data has been updated.",
+        });
+      })
+      .catch(error => {
+        console.error('Error refreshing transaction data:', error);
+        toast({
+          title: "Refresh Failed",
+          description: "Could not update transaction data. Please try again.",
+          variant: "destructive"
+        });
+      })
+      .finally(() => {
+        setIsRefreshing(false);
+      });
+  };
 
   if (!walletConnected) {
     return (
@@ -63,7 +105,19 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
   return (
     <div className={`glass-card p-6 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-      <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Recent Transactions</h2>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-1"
+          onClick={handleManualRefresh}
+          disabled={isLoading || isRefreshing}
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">Refresh</span>
+        </Button>
+      </div>
       
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-10">

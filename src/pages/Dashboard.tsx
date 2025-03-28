@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '../components/Layout';
 import WalletOverview from '../components/WalletOverview';
 import TransactionHistory from '../components/TransactionHistory';
@@ -46,7 +46,8 @@ const Dashboard = () => {
     walletConnected: providerWalletConnected,
     walletAddress: providerWalletAddress,
     walletType: providerWalletType,
-    isInitialized
+    isInitialized,
+    refreshWalletData
   } = usePhantomWallet();
   
   const [lastCommand, setLastCommand] = useState<string | null>(null);
@@ -63,6 +64,7 @@ const Dashboard = () => {
     recipient?: string;
     type: 'send' | 'stake' | 'swap';
   } | null>(null);
+  const [lastVoiceCommandTime, setLastVoiceCommandTime] = useState<number | null>(null);
   
   useEffect(() => {
     if (isInitialized && providerWalletConnected) {
@@ -72,8 +74,22 @@ const Dashboard = () => {
     }
   }, [isInitialized, providerWalletConnected, providerWalletAddress, providerWalletType]);
 
-  const handleVoiceCommand = (command: string) => {
+  useEffect(() => {
+    if (lastVoiceCommandTime && walletConnected && refreshWalletData) {
+      const refreshTimeout = setTimeout(() => {
+        console.log('Auto-refreshing wallet data after voice command');
+        refreshWalletData().catch(error => {
+          console.error('Error refreshing wallet data after voice command:', error);
+        });
+      }, 1000); // 1 second delay after voice command
+      
+      return () => clearTimeout(refreshTimeout);
+    }
+  }, [lastVoiceCommandTime, walletConnected, refreshWalletData]);
+
+  const handleVoiceCommand = useCallback((command: string) => {
     setLastCommand(command);
+    setLastVoiceCommandTime(Date.now());
     console.log("Voice command received:", command);
 
     const lowerCommand = command.toLowerCase();
@@ -129,6 +145,44 @@ const Dashboard = () => {
         description: `Preparing to send ${amount} SOL to ${recipient}. Please confirm the transaction.`,
         variant: "default"
       });
+      return;
+    }
+    
+    // Process refresh command
+    if (lowerCommand.includes('refresh') || lowerCommand.includes('update')) {
+      if (!walletConnected) {
+        toast({
+          title: "Wallet Not Connected",
+          description: "Please connect your wallet first.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (refreshWalletData) {
+        toast({
+          title: "Refreshing Data",
+          description: "Updating your wallet information...",
+          variant: "default"
+        });
+        
+        refreshWalletData()
+          .then(() => {
+            toast({
+              title: "Data Updated",
+              description: "Your wallet information has been refreshed.",
+              variant: "default"
+            });
+          })
+          .catch(error => {
+            console.error('Error refreshing wallet data:', error);
+            toast({
+              title: "Refresh Failed",
+              description: "Could not update your wallet data. Please try again.",
+              variant: "destructive"
+            });
+          });
+      }
       return;
     }
     
@@ -213,7 +267,7 @@ const Dashboard = () => {
       description: `I understood: "${command}". How else can I assist you?`,
       variant: "default"
     });
-  };
+  }, [walletConnected, refreshWalletData]);
 
   const generateRandomWalletAddress = () => {
     const characters = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
@@ -533,6 +587,7 @@ const Dashboard = () => {
               walletType={connectedWalletType}
               onSend={handleSend}
               onReceive={handleReceive}
+              handleVoiceCommand={handleVoiceCommand}
             />
           </div>
           <div>

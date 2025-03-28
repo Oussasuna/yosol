@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { ArrowUp, ArrowDown, Copy, Check, Loader2 } from 'lucide-react';
+import { ArrowUp, ArrowDown, Copy, Check, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +18,7 @@ interface WalletOverviewProps {
   balance?: number;
   onSend?: () => void;
   onReceive?: () => void;
+  handleVoiceCommand?: (command: string) => void;
 }
 
 const WalletOverview: React.FC<WalletOverviewProps> = ({ 
@@ -27,7 +27,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   walletType: propWalletType,
   balance: propBalance,
   onSend,
-  onReceive
+  onReceive,
+  handleVoiceCommand
 }) => {
   const { 
     walletConnected: contextWalletConnected, 
@@ -39,7 +40,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     recentTransactions: contextTransactions,
     handleSend: contextHandleSend,
     handleReceive: contextHandleReceive,
-    isLoading: contextIsLoading
+    isLoading: contextIsLoading,
+    refreshWalletData
   } = usePhantomWallet();
   
   // Use props if provided, otherwise fall back to context values
@@ -58,11 +60,23 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   const [isLoadingSend, setIsLoadingSend] = useState(false);
   const [isLoadingReceive, setIsLoadingReceive] = useState(false);
   const [activeTab, setActiveTab] = useState("balance");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
     console.log("WalletOverview received address:", walletAddress);
-  }, [walletAddress]);
+    
+    // Auto-refresh wallet data every 15 seconds
+    if (walletConnected && refreshWalletData) {
+      const refreshInterval = setInterval(() => {
+        refreshWalletData().catch(error => {
+          console.error('Error auto-refreshing wallet data:', error);
+        });
+      }, 15000);
+      
+      return () => clearInterval(refreshInterval);
+    }
+  }, [walletAddress, walletConnected, refreshWalletData]);
 
   const handleCopyAddress = () => {
     if (walletAddress) {
@@ -89,6 +103,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       });
     }
     setTimeout(() => setIsLoadingSend(false), 1000);
+    
+    // Voice feedback for this action
+    if (handleVoiceCommand) {
+      handleVoiceCommand("preparing to send SOL");
+    }
   };
 
   const handleReceive = () => {
@@ -104,11 +123,42 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       });
     }
     setTimeout(() => setIsLoadingReceive(false), 1000);
+    
+    // Voice feedback for this action
+    if (handleVoiceCommand) {
+      handleVoiceCommand("ready to receive SOL");
+    }
   };
 
-  // Calculate total portfolio value
+  const handleManualRefresh = () => {
+    if (!refreshWalletData) return;
+    
+    setIsRefreshing(true);
+    refreshWalletData()
+      .then(() => {
+        toast({
+          title: "Wallet Refreshed",
+          description: "Your wallet data has been updated.",
+        });
+        // Voice feedback for this action
+        if (handleVoiceCommand) {
+          handleVoiceCommand("wallet data refreshed");
+        }
+      })
+      .catch(error => {
+        console.error('Error refreshing wallet data:', error);
+        toast({
+          title: "Refresh Failed",
+          description: "Could not update wallet data. Please try again.",
+          variant: "destructive"
+        });
+      })
+      .finally(() => {
+        setIsRefreshing(false);
+      });
+  };
+
   const calculateTotalValue = () => {
-    // Use a conservative SOL price estimate (can be replaced with actual price feed)
     const solPrice = 150; // Approximate SOL price in USD
     const solValue = balance * solPrice; 
     const tokensValue = tokens.reduce((total, token) => total + token.usdValue, 0);
@@ -159,6 +209,16 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           </div>
         </div>
         <div className="flex space-x-2 mt-4 md:mt-0">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-1 bg-white/5 hover:bg-white/10"
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
           <Button 
             variant="outline" 
             size="sm" 
