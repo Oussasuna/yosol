@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, createContext, useContext, ReactNode } from 'react';
 import Solflare from '@solflare-wallet/sdk';
 import { toast } from '@/components/ui/use-toast';
@@ -73,49 +72,86 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [dataFetchError, setDataFetchError] = useState<string | null>(null);
 
   const fetchWalletData = async (address: string) => {
     setIsLoading(true);
+    setDataFetchError(null);
+    
     try {
-      // Fetch SOL balance
-      const response = await fetch(`https://api.mainnet-beta.solana.com`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'getBalance',
-          params: [address],
-        }),
-      });
+      console.log(`Fetching wallet data for address: ${address}`);
       
-      const balanceData = await response.json();
-      if (balanceData.result?.value) {
+      // Fetch SOL balance with error handling and retries
+      let balanceData = null;
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries && balanceData === null) {
+        try {
+          const response = await fetch(`https://api.mainnet-beta.solana.com`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 1,
+              method: 'getBalance',
+              params: [address],
+            }),
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Balance fetch failed with status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          if (data.error) {
+            throw new Error(`RPC error: ${data.error.message || JSON.stringify(data.error)}`);
+          }
+          
+          balanceData = data;
+        } catch (error) {
+          console.error(`Balance fetch attempt ${retryCount + 1} failed:`, error);
+          retryCount++;
+          if (retryCount < maxRetries) {
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        }
+      }
+      
+      if (balanceData?.result?.value) {
         // Convert from lamports to SOL (1 SOL = 10^9 lamports)
         const solBalance = balanceData.result.value / 1000000000;
+        console.log(`Wallet balance: ${solBalance} SOL`);
         setBalance(solBalance);
+      } else {
+        console.warn("Failed to fetch SOL balance after retries, using fallback or zero value");
+        // Keep existing balance or set to 0 if none exists
+        setBalance(prev => prev || 0);
       }
 
-      // Fetch token balances
-      await fetchTokens(address);
+      // Fetch token balances, NFTs, and transactions in parallel
+      await Promise.all([
+        fetchTokens(address),
+        fetchNFTs(address),
+        fetchTransactions(address)
+      ]);
       
-      // Fetch NFTs
-      await fetchNFTs(address);
-      
-      // Fetch transactions
-      await fetchTransactions(address);
+      console.log("Wallet data fetch completed successfully");
       
     } catch (error) {
-      console.error("Error fetching wallet data:", error);
+      console.error("Error in fetchWalletData:", error);
+      setDataFetchError("Failed to load wallet data. Please try again.");
+      
       toast({
         title: "Data Fetch Error",
         description: "Could not load all wallet data. Some data may be simulated.",
         variant: "destructive"
       });
       
-      // Provide fallback data if API calls fail
+      // Provide minimal fallback data if everything fails
       if (balance === 0) setBalance(0.01);
     } finally {
       setIsLoading(false);
@@ -124,13 +160,22 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
 
   const fetchTokens = async (address: string) => {
     try {
+      console.log("Fetching token data from Jupiter API");
+      
       // Use Jupiter API to fetch tokens (more reliable than RPC for token data)
       const response = await fetch(`https://quote-api.jup.ag/v6/user-holdings?wallet=${address}`);
+      
+      if (!response.ok) {
+        throw new Error(`Token fetch failed with status: ${response.status}`);
+      }
+      
       const data = await response.json();
       
       if (data.tokens && Array.isArray(data.tokens)) {
         const mappedTokens: Token[] = data.tokens
-          .filter((token: any) => parseFloat(token.usdValue) > 0.01 || parseFloat(token.amount) > 0) // Filter out dust but keep tokens with values
+          .filter((token: any) => 
+            token && (parseFloat(token.usdValue) > 0.01 || parseFloat(token.amount) > 0)
+          )
           .map((token: any) => ({
             symbol: token.symbol || "Unknown",
             name: token.name || token.symbol || "Unknown Token",
@@ -139,11 +184,12 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
             logoURI: token.logoURI || undefined
           }));
         
+        console.log(`Found ${mappedTokens.length} tokens for wallet`);
         setTokens(mappedTokens);
         
         if (mappedTokens.length === 0) {
+          console.log("No tokens found, using minimal example data");
           // If no tokens were found, set some example tokens with very small values
-          // This makes the UI more informative for testing
           setTokens([
             {
               symbol: "USDC",
@@ -154,6 +200,8 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
             }
           ]);
         }
+      } else {
+        throw new Error("Invalid token data format from API");
       }
     } catch (error) {
       console.error("Error fetching tokens:", error);
@@ -172,6 +220,8 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
 
   const fetchNFTs = async (address: string) => {
     try {
+      console.log("Fetching NFT data from Helius API");
+      
       // Use Helius RPC for NFT data (public methods)
       const response = await fetch(`https://mainnet.helius-rpc.com/?api-key=15319107-6a6d-427d-abd3-fb708c9ac916`, {
         method: 'POST',
@@ -194,6 +244,10 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         }),
       });
       
+      if (!response.ok) {
+        throw new Error(`NFT fetch failed with status: ${response.status}`);
+      }
+      
       const data = await response.json();
       
       if (data.result && data.result.items && Array.isArray(data.result.items)) {
@@ -213,9 +267,11 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
               nft.grouping[0].group_value || "Unknown Collection" : "Unknown Collection"
           }));
         
+        console.log(`Found ${mappedNFTs.length} NFTs for wallet`);
         setNfts(mappedNFTs);
         
         if (mappedNFTs.length === 0) {
+          console.log("No NFTs found, using example data");
           // If no NFTs are found, use example data
           setNfts([
             {
@@ -225,6 +281,8 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
             }
           ]);
         }
+      } else {
+        throw new Error("Invalid NFT data format from API");
       }
     } catch (error) {
       console.error("Error fetching NFTs:", error);
@@ -241,23 +299,49 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
 
   const fetchTransactions = async (address: string) => {
     try {
-      // Fetch recent transactions
-      const response = await fetch(`https://api.mainnet-beta.solana.com`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'getSignaturesForAddress',
-          params: [address, { limit: 10 }],
-        }),
-      });
+      console.log("Fetching transaction history");
       
-      const txData = await response.json();
+      // Fetch recent transactions with retries
+      let txData = null;
+      let retryCount = 0;
+      const maxRetries = 3;
       
-      if (txData.result && Array.isArray(txData.result) && txData.result.length > 0) {
+      while (retryCount < maxRetries && txData === null) {
+        try {
+          const response = await fetch(`https://api.mainnet-beta.solana.com`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 1,
+              method: 'getSignaturesForAddress',
+              params: [address, { limit: 10 }],
+            }),
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Transaction fetch failed with status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          if (data.error) {
+            throw new Error(`RPC error: ${data.error.message || JSON.stringify(data.error)}`);
+          }
+          
+          txData = data;
+        } catch (error) {
+          console.error(`Transaction fetch attempt ${retryCount + 1} failed:`, error);
+          retryCount++;
+          if (retryCount < maxRetries) {
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        }
+      }
+      
+      if (txData?.result && Array.isArray(txData.result) && txData.result.length > 0) {
         // Process transaction data
         const processedTxs: Transaction[] = await Promise.all(
           txData.result.map(async (tx: any, index: number) => {
@@ -279,21 +363,45 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
                 }),
               });
               
+              if (!txDetailsResponse.ok) {
+                throw new Error(`Transaction details fetch failed with status: ${txDetailsResponse.status}`);
+              }
+              
               const txDetails = await txDetailsResponse.json();
               
               if (txDetails.result) {
                 const transaction = txDetails.result;
+                if (!transaction.transaction || !transaction.transaction.message || !transaction.transaction.message.accountKeys) {
+                  throw new Error("Incomplete transaction data");
+                }
+                
                 const isSender = transaction.transaction.message.accountKeys[0] === address;
-                const amount = transaction.meta?.postBalances[0] - transaction.meta?.preBalances[0];
-                const absAmount = Math.abs(amount) / 1000000000; // Convert lamports to SOL
+                
+                // Calculate the amount safely
+                let amount = 0;
+                if (transaction.meta && transaction.meta.postBalances && transaction.meta.preBalances) {
+                  // For the sender, the amount is the decrease in their balance
+                  const preBalance = isSender ? transaction.meta.preBalances[0] : 0;
+                  const postBalance = isSender ? transaction.meta.postBalances[0] : 0;
+                  amount = Math.abs(postBalance - preBalance) / 1000000000; // Convert lamports to SOL
+                }
+                
+                // Format recipient/sender addresses
+                const counterpartyAddress = isSender 
+                  ? transaction.transaction.message.accountKeys[1] 
+                  : transaction.transaction.message.accountKeys[0];
+                
+                const formattedAddress = counterpartyAddress 
+                  ? `${counterpartyAddress.slice(0, 6)}...${counterpartyAddress.slice(-4)}` 
+                  : "Unknown";
                 
                 return {
                   id: tx.signature,
                   type: isSender ? 'send' : 'receive',
-                  amount: absAmount.toFixed(5),
+                  amount: amount.toFixed(5),
                   ...(isSender 
-                    ? { to: transaction.transaction.message.accountKeys[1].slice(0, 6) + "..." + transaction.transaction.message.accountKeys[1].slice(-4) } 
-                    : { from: transaction.transaction.message.accountKeys[0].slice(0, 6) + "..." + transaction.transaction.message.accountKeys[0].slice(-4) }),
+                    ? { to: formattedAddress } 
+                    : { from: formattedAddress }),
                   date: new Date(tx.blockTime * 1000).toISOString(),
                   status: tx.confirmationStatus === 'finalized' ? 'completed' : 'pending'
                 };
@@ -318,8 +426,10 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
           })
         );
         
+        console.log(`Processed ${processedTxs.length} transactions`);
         setRecentTransactions(processedTxs);
       } else {
+        console.log("No transactions found or failed to fetch, using example data");
         // If no transactions found, provide example data
         const currentDate = new Date();
         const exampleTxs: Transaction[] = [];
@@ -372,16 +482,21 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
   useEffect(() => {
     const initWallets = async () => {
       try {
+        console.log("Initializing wallet connections");
+        
         // Initialize Solflare wallet
         const solflareWallet = new Solflare();
         
         solflareWallet.on('connect', () => {
           if (solflareWallet.publicKey) {
             const address = solflareWallet.publicKey.toString();
+            console.log(`Solflare wallet connected: ${address}`);
+            
             setWalletAddress(address);
             setWalletConnected(true);
             setWalletType("Solflare");
             fetchWalletData(address);
+            
             toast({
               title: "Wallet Connected",
               description: "Your Solflare wallet is connected",
@@ -391,6 +506,8 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         
         solflareWallet.on('disconnect', () => {
           if (walletType === "Solflare") {
+            console.log("Solflare wallet disconnected");
+            
             setWalletConnected(false);
             setWalletAddress(null);
             setWalletType(null);
@@ -398,6 +515,7 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
             setTokens([]);
             setNfts([]);
             setRecentTransactions([]);
+            
             toast({
               title: "Wallet Disconnected",
               description: "Your Solflare wallet has been disconnected",
@@ -413,10 +531,13 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
           if (typeof window !== 'undefined' && window.solflare?.isConnected) {
             if (solflareWallet.isConnected && solflareWallet.publicKey) {
               const address = solflareWallet.publicKey.toString();
+              console.log(`Solflare wallet already connected: ${address}`);
+              
               setWalletAddress(address);
               setWalletConnected(true);
               setWalletType("Solflare");
               fetchWalletData(address);
+              
               toast({
                 title: "Wallet Connected",
                 description: "Your Solflare wallet is already connected",
@@ -459,6 +580,7 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
       }
 
       try {
+        console.log("Attempting to connect Solflare wallet");
         // Connect to Solflare
         await solflare.connect();
         
@@ -500,6 +622,8 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
       const address = simulatedWalletAddresses[type as keyof typeof simulatedWalletAddresses] || 
                       '7YWm5WGRnXEEtST4Vr8WkR2WnPvMxW7Ka5YrGKjNFNwW';
 
+      console.log(`Connecting to simulated ${type} wallet: ${address}`);
+      
       setTimeout(() => {
         setWalletAddress(address);
         setWalletConnected(true);
@@ -597,6 +721,18 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
     }
   };
 
+  const refreshWalletData = () => {
+    if (walletAddress) {
+      console.log("Manually refreshing wallet data");
+      fetchWalletData(walletAddress);
+      
+      toast({
+        title: "Refreshing Wallet Data",
+        description: "Fetching latest wallet information...",
+      });
+    }
+  };
+
   return (
     <PhantomWalletContext.Provider
       value={{
@@ -616,6 +752,17 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
       }}
     >
       {children}
+      {dataFetchError && (
+        <div className="fixed bottom-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50">
+          <p className="font-medium">Error: {dataFetchError}</p>
+          <button 
+            onClick={refreshWalletData}
+            className="mt-2 bg-white text-red-500 px-3 py-1 rounded text-sm"
+          >
+            Retry
+          </button>
+        </div>
+      )}
     </PhantomWalletContext.Provider>
   );
 };

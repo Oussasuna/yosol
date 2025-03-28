@@ -1,192 +1,136 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
-// Convert audio blob to base64
-export const blobToBase64 = async (blob: Blob): Promise<string> => {
-  try {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        // Remove the data URL prefix and get only the base64 part
-        const base64 = base64String.split(',')[1];
-        if (!base64) {
-          reject(new Error("Failed to convert blob to base64"));
-          return;
-        }
-        resolve(base64);
-      };
-      reader.onerror = (error) => {
-        console.error("Error reading blob:", error);
-        reject(error);
-      };
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.error("Error in blobToBase64:", error);
-    throw error;
-  }
+// Define OPENAI voice types
+export const OPENAI_VOICES = {
+  ALLOY: 'alloy',
+  ECHO: 'echo',
+  FABLE: 'fable',
+  ONYX: 'onyx',
+  NOVA: 'nova',
+  SHIMMER: 'shimmer'
 };
 
-// Convert audio buffer to a blob for recording
-export const audioBufferToBlob = (buffer: Float32Array): Blob => {
-  try {
-    // Convert Float32Array to Int16Array for better compatibility with audio formats
-    const int16Array = new Int16Array(buffer.length);
-    for (let i = 0; i < buffer.length; i++) {
-      // Convert from [-1, 1] to [-32768, 32767]
-      const s = Math.max(-1, Math.min(1, buffer[i]));
-      int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-    }
-    
-    return new Blob([int16Array], { type: 'audio/webm' });
-  } catch (error) {
-    console.error("Error in audioBufferToBlob:", error);
-    throw error;
+/**
+ * Convert Float32Array audio data to a Blob for sending to server
+ */
+export const audioBufferToBlob = (audioData: Float32Array): Blob => {
+  // Ensure we have valid audio data
+  if (!audioData || audioData.length === 0) {
+    console.error('Invalid audio data provided to audioBufferToBlob');
+    throw new Error('Invalid audio data');
   }
-};
 
-// Enhanced retry logic for edge function calls with better error classification
-const retryEdgeFunction = async (
-  functionName: string, 
-  body: any, 
-  maxRetries: number = 3
-): Promise<any> => {
-  let lastError;
-  let simulationMode = false;
+  // Convert the Float32Array to a regular array for compatibility
+  const audioArray = Array.from(audioData);
   
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`Calling ${functionName} function, attempt ${attempt + 1}`);
-      
-      // Set a timeout for the function call to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error(`${functionName} call timed out`)), 30000);
-      });
-      
-      const responsePromise = supabase.functions.invoke(functionName, {
-        body: body,
-      });
-      
-      // Race between the function call and the timeout
-      const raceResult = await Promise.race([responsePromise, timeoutPromise]);
-      const { data, error } = raceResult as any;
+  // Create a WAV file structure
+  // WAV header is 44 bytes
+  const buffer = new ArrayBuffer(44 + audioArray.length * 2);
+  const view = new DataView(buffer);
+  
+  // Write WAV header
+  // "RIFF" chunk descriptor
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + audioArray.length * 2, true); // file size
+  writeString(view, 8, 'WAVE');
+  
+  // "fmt " sub-chunk
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true); // subchunk1 size
+  view.setUint16(20, 1, true); // PCM format
+  view.setUint16(22, 1, true); // mono channel
+  view.setUint32(24, 48000, true); // sample rate
+  view.setUint32(28, 48000 * 2, true); // byte rate
+  view.setUint16(32, 2, true); // block align
+  view.setUint16(34, 16, true); // bits per sample
+  
+  // "data" sub-chunk
+  writeString(view, 36, 'data');
+  view.setUint32(40, audioArray.length * 2, true); // subchunk2 size
+  
+  // Write audio data
+  const volume = 0.5;
+  for (let i = 0; i < audioArray.length; i++) {
+    // Scale Float32Array values to Int16 range
+    const s = Math.max(-1, Math.min(1, audioArray[i]));
+    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+  
+  // Create a Blob from the WAV data
+  return new Blob([buffer], { type: 'audio/wav' });
+  
+  // Helper function to write strings to the DataView
+  function writeString(view: DataView, offset: number, string: string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+};
 
-      if (error) {
-        console.error(`Error in ${functionName} attempt ${attempt + 1}:`, error);
-        lastError = error;
-        
-        // Enhanced error detection for quota and rate limit issues
-        const isQuotaError = 
-          (typeof error.message === 'string' && 
-          (error.message.toLowerCase().includes('quota') || 
-           error.message.toLowerCase().includes('exceeded') || 
-           error.message.toLowerCase().includes('rate limit') ||
-           error.message.toLowerCase().includes('insufficient_quota')));
-        
-        if (isQuotaError) {
-          console.warn("API quota exceeded, activating simulation mode");
-          simulationMode = true;
-          break; // Exit the retry loop immediately for quota errors
-        }
-        
-        // Notify the user about the error on the last attempt only
-        if (attempt === maxRetries) {
-          toast({
-            title: "Voice Processing Error",
-            description: `Error: ${error.message || 'Unknown error'}. Using fallback mode.`,
-            variant: "destructive"
-          });
-        }
-        
-        // Wait before retrying (exponential backoff)
-        if (attempt < maxRetries) {
-          const delay = Math.pow(2, attempt) * 1000;
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-        continue;
-      }
+/**
+ * Convert a Blob to a base64 string
+ */
+export const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      // Extract the base64 part only (remove data:audio/wav;base64, prefix)
+      const base64 = base64String.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+/**
+ * Transcribe audio using OpenAI Whisper API via Supabase Edge Function
+ */
+export const transcribeAudio = async (base64Audio: string): Promise<string> => {
+  if (!base64Audio || base64Audio.length === 0) {
+    console.error('No audio data provided to transcribeAudio');
+    return simulateTranscription();
+  }
+
+  console.log(`Sending audio data for transcription (${base64Audio.length} chars)`);
+  
+  try {
+    const { data, error } = await supabase.functions.invoke('voice-to-text', {
+      body: { audio: base64Audio }
+    });
+
+    if (error) {
+      console.error('Voice transcription error from edge function:', error);
       
-      return data;
-    } catch (error: any) {
-      console.error(`Exception in ${functionName} attempt ${attempt + 1}:`, error);
-      lastError = error;
-      
-      // Enhanced error detection for API issues
-      const isQuotaOrConnectionError = 
-        error instanceof Error && 
-        (error.message === 'API_QUOTA_EXCEEDED' || 
-         error.message.toLowerCase().includes('quota') || 
-         error.message.toLowerCase().includes('exceeded') ||
-         error.message.toLowerCase().includes('rate limit') ||
-         error.message.toLowerCase().includes('network') ||
-         error.message.toLowerCase().includes('connection'));
-      
-      if (isQuotaOrConnectionError) {
-        console.warn("API issue detected, activating simulation mode");
-        simulationMode = true;
-        break; // Exit the retry loop immediately for these errors
-      }
-      
-      // Notify the user about the error on the last attempt
-      if (attempt === maxRetries) {
+      // Check if it's a quota error
+      if (error.message && (
+          error.message.includes('quota') || 
+          error.message.includes('rate limit') ||
+          error.message.includes('capacity') ||
+          error.message.includes('exceeded')
+        )) {
         toast({
-          title: "Voice Processing Error",
-          description: `Using offline mode due to: ${error instanceof Error ? error.message : 'Connection issues'}`,
-          variant: "default"
+          title: "API Quota Exceeded",
+          description: "Voice recognition is limited. Using simulation mode.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Voice Recognition Error",
+          description: "Could not process your speech. Using simulation mode.",
+          variant: "destructive"
         });
       }
       
-      if (attempt < maxRetries) {
-        const delay = Math.pow(2, attempt) * 1000;
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
+      return simulateTranscription();
     }
-  }
-  
-  // If we've entered simulation mode or all attempts failed, return a simulated response
-  console.warn(`${simulationMode ? 'Quota exceeded' : 'All attempts failed'} for ${functionName}, using simulation mode`);
-  if (functionName === 'voice-to-text') {
-    return simulateTranscription();
-  } else {
-    return { audioContent: getSimulatedAudioResponse() };  // Return in the same format as the real API
-  }
-};
-
-// Improved simulation for transcription with better user experience
-const simulateTranscription = () => {
-  const fallbackResponses = [
-    "Check my SOL balance",
-    "Show me the latest market trends",
-    "What are my staking rewards?",
-    "Send 5 SOL to my friend",
-    "Connect my wallet",
-    "Show my NFT collection",
-    "What's the current Solana price?",
-    "Stake 10 SOL for maximum yield",
-    "Set price alert for SOL at $150"
-  ];
-  const response = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
-  console.log("Using fallback simulation for transcription:", response);
-  return { text: response };
-};
-
-// Transcribe audio using OpenAI's Whisper API through our Supabase Edge Function
-export const transcribeAudio = async (audioBase64: string): Promise<string> => {
-  try {
-    if (!audioBase64 || audioBase64.length === 0) {
-      throw new Error('No audio data provided');
-    }
-    
-    console.log("Invoking voice-to-text function with audio data length:", audioBase64.length);
-    
-    // Use enhanced retry logic for more resilience
-    const data = await retryEdgeFunction('voice-to-text', { audio: audioBase64 });
 
     if (!data || !data.text) {
-      console.warn("No transcription returned, falling back to simulation");
-      const fallbackResponse = simulateTranscription();
-      return fallbackResponse.text;
+      console.error('No transcription returned from edge function');
+      return simulateTranscription();
     }
 
     console.log("Transcription received:", data.text);
@@ -195,226 +139,220 @@ export const transcribeAudio = async (audioBase64: string): Promise<string> => {
   } catch (error) {
     console.error('Voice transcription error:', error);
     
-    // Fall back to a simulation for better user experience
-    console.log("Using fallback simulation for transcription due to error");
-    const fallbackResponse = simulateTranscription();
-    return fallbackResponse.text;
+    toast({
+      title: "Voice Recognition Failed",
+      description: "Could not connect to voice service. Using simulation mode.",
+      variant: "destructive"
+    });
+    
+    return simulateTranscription();
   }
 };
 
-// Available voices from OpenAI
-export const OPENAI_VOICES = {
-  ALLOY: 'alloy',      // Neutral/versatile
-  ECHO: 'echo',        // Neutral/analytical
-  FABLE: 'fable',      // Expressive/bright
-  ONYX: 'onyx',        // Authoritative/deep
-  NOVA: 'nova',        // Warm/friendly
-  SHIMMER: 'shimmer'   // Clear/polished
-};
+/**
+ * Generate realistic simulated transcription results
+ */
+function simulateTranscription(): string {
+  const simulatedTranscriptions = [
+    "Show me my wallet balance.",
+    "What's the current Solana price?",
+    "Send five SOL to my friend's account.",
+    "When was my last transaction?",
+    "How many NFTs do I own?",
+    "Check my staking rewards please.",
+    "Give me a market update on Solana."
+  ];
+  
+  return simulatedTranscriptions[Math.floor(Math.random() * simulatedTranscriptions.length)];
+}
 
-// Improved simulated TTS response for offline mode
-const getSimulatedAudioResponse = (): string => {
-  // This is a tiny 1-second MP3 file encoded as base64
-  // It just plays a small "beep" sound to indicate the system is working
-  return "SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAAGhgC1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAWFAAAAAAAABoYhslwt//swxAADohMZj0EQASAAANIAAAAwrRpdL8kEbJCpJIkiRfJKr6QD4Q+cDdGQ+cHkAj5AQA7w+QPgfA+B8AAAAQcDgcHnex4+L1c1ZqI2Dt2tWu7HGOUCGYiIh6zJrUcjMGTnNXhfT5orrmTYg4eGxMlSl46sy/YUJRaoysWYFIxe4T5Q6RJT5yMj9hVaXSUk5Idr5armUEZv/k3ajEb//z0p39F9VYoExmOcUPvAvGl0n1i5CnnPtLtSn5RZ/t6rKDQZ6q7eETJxoVpVaXSfWNlXRawlEErplE15//sxxAD/AAABPAAAAIAAAA0gAAABJo0ijRlmFnvYv/y2Jn///OsxIui5oV5kziig5n/5h/nNdtqv+YF3/LN//zF///Me//+fX9///iWGpwFACgMEQMmGEFCXL9v8kkQAEQBEARAPQPcDoSc60ZZt2YwbZ340y2ZJIU6M8nWHUbouQ6/w3PWgxXkhU8yd//sQxBcAHO4ZFYe8bcuJwyQz97W4BTzhyR2Pp1WxKvS6rrf/+E8liO9JFy5YySQzJYjsRyK5EsViRcsmTJkzy/VK3////+ZIkSSKJYjmSPZZZZJUYnkUTJLqv////2Wy2W222223W22222//7EMQOABmaJRGH7y3DbEM08j37biAAAABgACAAIAAgACATBMEwTBMEwTBMEwQCAQCAQCAQCAQCAIBAIBAIBAIBAIBMEwTBMEwTBMEwTBMEwTBMEwTBMEwTBMEwTBMEwTBMEwTBMEwTBMEw";
-};
+/**
+ * Generate speech from text using OpenAI TTS API via Supabase Edge Function
+ */
+export const textToSpeech = async (text: string, voice: string = OPENAI_VOICES.ALLOY): Promise<string> => {
+  if (!text || text.length === 0) {
+    console.error('No text provided to textToSpeech');
+    return '';
+  }
 
-// Generate speech from text using OpenAI's TTS API through our Supabase Edge Function
-export const textToSpeech = async (
-  text: string, 
-  voice: string = OPENAI_VOICES.NOVA
-): Promise<string> => {
+  console.log(`Converting text to speech: "${text}" using voice: ${voice}`);
+  
   try {
-    console.log("Invoking text-to-voice function with text:", text, "and voice:", voice);
-    
-    // Use enhanced retry logic for more resilience
-    const data = await retryEdgeFunction('text-to-voice', { text, voice });
+    const { data, error } = await supabase.functions.invoke('text-to-voice', {
+      body: { text, voice }
+    });
 
-    if (!data || !data.audioContent) {
-      console.warn('No audio content returned from service, using fallback');
-      return getSimulatedAudioResponse();
-    }
-
-    console.log("Audio content received, length:", data.audioContent.length);
-    return data.audioContent;
-  } catch (error) {
-    console.error('Text to speech error:', error);
-    
-    // Return simulated audio for better UX when the API fails
-    console.log("Using fallback simulation for audio response due to error");
-    return getSimulatedAudioResponse();
-  }
-};
-
-// Improved audio playback with multiple fallback methods
-export const playAudioFromBase64 = (base64Audio: string): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    try {
-      if (!base64Audio || base64Audio.length === 0) {
-        console.warn("Empty audio data provided to player");
+    if (error) {
+      console.error('Text-to-speech error from edge function:', error);
+      
+      // Check if it's a quota error
+      if (error.message && (
+          error.message.includes('quota') || 
+          error.message.includes('rate limit') ||
+          error.message.includes('capacity') ||
+          error.message.includes('exceeded')
+        )) {
         toast({
-          title: "Audio Playback",
-          description: "No audio data available to play",
-          variant: "default"
+          title: "API Quota Exceeded",
+          description: "Voice generation is limited. Speech disabled.",
+          variant: "destructive"
         });
-        resolve(); // Resolve without playing anything
-        return;
+      } else {
+        toast({
+          title: "Voice Generation Error",
+          description: "Could not generate speech. Using text only mode.",
+          variant: "destructive"
+        });
       }
       
-      console.log("Attempting to play audio with primary method");
-      playWithAudioAPI(base64Audio, resolve, reject)
-        .catch((err) => {
-          console.warn("Primary audio playback failed, trying fallback method 1:", err);
-          // First fallback: Try with blob URL
-          playWithBlobURL(base64Audio, resolve, reject)
-            .catch((err2) => {
-              console.warn("First fallback failed, trying final method:", err2);
-              // Second fallback: Use Web Audio API
-              playWithWebAudioAPI(base64Audio, resolve, reject)
-                .catch((finalErr) => {
-                  console.error("All audio playback methods failed:", finalErr);
-                  toast({
-                    title: "Audio Playback Failed",
-                    description: "Could not play audio response. Your browser may have limitations.",
-                    variant: "destructive"
-                  });
-                  reject(finalErr);
-                });
-            });
-        });
-    } catch (error) {
-      console.error("Audio setup error:", error);
-      reject(error);
+      return '';
     }
-  });
-};
 
-// Primary playback method using Audio API
-const playWithAudioAPI = (base64Audio: string, resolve: () => void, reject: (error: any) => void): Promise<void> => {
-  return new Promise((res, rej) => {
-    try {
-      const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
-      
-      audio.onended = () => {
-        console.log("Audio playback completed successfully");
-        res();
-        resolve();
-      };
-      
-      audio.onerror = (e) => {
-        console.error("Audio playback error:", e);
-        rej(e);
-      };
-      
-      audio.play().catch(err => {
-        console.error("Audio play error:", err);
-        if (err.name === 'NotAllowedError') {
-          toast({
-            title: "Audio Playback Error",
-            description: "Please interact with the page to enable audio playback.",
-            variant: "destructive"
-          });
-        }
-        rej(err);
-      });
-    } catch (error) {
-      console.error("Error in audio API method:", error);
-      rej(error);
+    if (!data || !data.audioContent) {
+      console.error('No audio content returned from edge function');
+      return '';
     }
-  });
-};
 
-// First fallback using blob URL
-const playWithBlobURL = (base64Audio: string, resolve: () => void, reject: (error: any) => void): Promise<void> => {
-  return new Promise((res, rej) => {
-    try {
-      const blob = base64ToBlob(base64Audio, 'audio/mp3');
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      
-      audio.onended = () => {
-        URL.revokeObjectURL(url);
-        console.log("Blob URL audio playback completed");
-        res();
-        resolve();
-      };
-      
-      audio.onerror = (e) => {
-        URL.revokeObjectURL(url);
-        console.error("Blob URL audio playback error:", e);
-        rej(e);
-      };
-      
-      audio.play().catch(err => {
-        URL.revokeObjectURL(url);
-        console.error("Blob URL audio play error:", err);
-        rej(err);
-      });
-    } catch (error) {
-      console.error("Error in blob URL method:", error);
-      rej(error);
-    }
-  });
-};
-
-// Second fallback using Web Audio API
-const playWithWebAudioAPI = (base64Audio: string, resolve: () => void, reject: (error: any) => void): Promise<void> => {
-  return new Promise((res, rej) => {
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const blob = base64ToBlob(base64Audio, 'audio/mp3');
-      
-      const fileReader = new FileReader();
-      fileReader.onload = async (event) => {
-        try {
-          const arrayBuffer = event.target?.result as ArrayBuffer;
-          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-          
-          const source = audioContext.createBufferSource();
-          source.buffer = audioBuffer;
-          source.connect(audioContext.destination);
-          
-          source.onended = () => {
-            console.log("Web Audio API playback completed");
-            res();
-            resolve();
-          };
-          
-          source.start(0);
-        } catch (error) {
-          console.error("Web Audio API decode/play error:", error);
-          rej(error);
-        }
-      };
-      
-      fileReader.onerror = (error) => {
-        console.error("FileReader error:", error);
-        rej(error);
-      };
-      
-      fileReader.readAsArrayBuffer(blob);
-    } catch (error) {
-      console.error("Error in Web Audio API method:", error);
-      rej(error);
-    }
-  });
-};
-
-// Helper function to convert base64 to blob
-const base64ToBlob = (base64: string, type: string): Blob => {
-  try {
-    const binStr = atob(base64);
-    const len = binStr.length;
-    const arr = new Uint8Array(len);
-    
-    for (let i = 0; i < len; i++) {
-      arr[i] = binStr.charCodeAt(i);
-    }
-    
-    return new Blob([arr], { type });
+    return data.audioContent;
   } catch (error) {
-    console.error("Error converting base64 to blob:", error);
-    // Return a minimal valid blob if conversion fails
-    return new Blob([''], { type });
+    console.error('Text-to-speech error:', error);
+    
+    toast({
+      title: "Voice Generation Failed",
+      description: "Could not connect to voice service. Using text only mode.",
+      variant: "destructive"
+    });
+    
+    return '';
   }
 };
+
+/**
+ * Play audio from base64 string with fallback methods
+ */
+export const playAudioFromBase64 = async (base64Audio: string): Promise<void> => {
+  if (!base64Audio || base64Audio.length === 0) {
+    console.error('No audio data provided to playAudioFromBase64');
+    return;
+  }
+
+  // Try multiple methods to play audio for maximum browser compatibility
+  const methods = [
+    playWithAudioContext,
+    playWithAudioElement,
+    playWithBlobURL
+  ];
+
+  // Try each method in sequence until one works
+  for (const method of methods) {
+    try {
+      await method(base64Audio);
+      console.log(`Audio played successfully using ${method.name}`);
+      return;
+    } catch (error) {
+      console.warn(`${method.name} failed, trying next method:`, error);
+    }
+  }
+
+  // If all methods fail, show an error
+  console.error('All audio playback methods failed');
+  toast({
+    title: "Audio Playback Failed",
+    description: "Could not play audio response. Check your audio settings.",
+    variant: "destructive"
+  });
+};
+
+/**
+ * Play audio using Web Audio API
+ */
+async function playWithAudioContext(base64Audio: string): Promise<void> {
+  // Decode base64 to binary
+  const binaryString = atob(base64Audio);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  
+  // Create audio context
+  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  
+  // Decode audio data
+  const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
+  
+  // Create source and play
+  const source = audioContext.createBufferSource();
+  source.buffer = audioBuffer;
+  source.connect(audioContext.destination);
+  source.start(0);
+  
+  // Return a promise that resolves when the audio finishes playing
+  return new Promise((resolve) => {
+    source.onended = () => {
+      resolve();
+    };
+  });
+}
+
+/**
+ * Play audio using HTML Audio element
+ */
+async function playWithAudioElement(base64Audio: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
+    
+    audio.onended = () => resolve();
+    audio.onerror = (e) => reject(new Error(`Audio playback error: ${e}`));
+    
+    // Some browsers need a user interaction to play audio
+    // We'll try to play and catch any errors
+    const playPromise = audio.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.catch(error => {
+        console.warn('Audio element autoplay was prevented:', error);
+        reject(error);
+      });
+    }
+  });
+}
+
+/**
+ * Play audio using Blob URL
+ */
+async function playWithBlobURL(base64Audio: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // Convert base64 to blob
+    const binaryString = atob(base64Audio);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    const blob = new Blob([bytes], { type: 'audio/mp3' });
+    const url = URL.createObjectURL(blob);
+    
+    const audio = new Audio(url);
+    
+    audio.onended = () => {
+      URL.revokeObjectURL(url);
+      resolve();
+    };
+    
+    audio.onerror = (e) => {
+      URL.revokeObjectURL(url);
+      reject(new Error(`Blob URL audio playback error: ${e}`));
+    };
+    
+    // Try to play
+    const playPromise = audio.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.catch(error => {
+        URL.revokeObjectURL(url);
+        console.warn('Blob URL audio autoplay was prevented:', error);
+        reject(error);
+      });
+    }
+  });
+}
