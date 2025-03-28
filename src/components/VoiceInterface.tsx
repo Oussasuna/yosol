@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume, VolumeX, AlertTriangle } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { VoiceRecorder } from '@/utils/VoiceRecorder';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   audioBufferToBlob, 
   blobToBase64, 
@@ -197,7 +198,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   const handleStopListening = async () => {
     console.log('Stopping listening process, using AI:', isUsingAI, 'service status:', serviceStatus);
     
-    if (isUsingAI && recorderRef.current && serviceStatus !== 'offline') {
+    if (isUsingAI && recorderRef.current && serviceStatus === 'online') {
       try {
         setIsListening(false);
         setIsAnimating(false);
