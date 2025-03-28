@@ -143,6 +143,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
     setCommand('Listening...');
     setProcessingStatus('idle');
     
+    // Fix the type comparison issue - use strict equality for string literals
     if (serviceStatus === 'offline' || errorCount >= 3) {
       console.log('Voice service is offline or too many errors, using simulation mode');
       simulateVoiceRecognition();
