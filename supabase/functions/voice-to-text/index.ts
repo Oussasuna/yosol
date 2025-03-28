@@ -84,14 +84,17 @@ serve(async (req) => {
     // Process audio in chunks
     const binaryAudio = processBase64Chunks(audio);
     
-    // Prepare form data
-    console.log("Preparing form data for OpenAI request");
+    // Prepare form data with parameters for maximum accuracy
+    console.log("Preparing form data for OpenAI request with accuracy optimizations");
     const formData = new FormData();
     const blob = new Blob([binaryAudio], { type: 'audio/webm' });
     formData.append('file', blob, 'audio.webm');
     formData.append('model', 'whisper-1');
+    formData.append('language', 'en'); // Force English for better accuracy
+    formData.append('temperature', '0.0'); // Lower temperature for more deterministic results
+    formData.append('response_format', 'json'); // Ensure we get structured response
 
-    console.log("Sending request to OpenAI...");
+    console.log("Sending request to OpenAI with enhanced accuracy parameters...");
     
     // Send to OpenAI with retry logic
     let response;

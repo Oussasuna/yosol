@@ -18,7 +18,7 @@ export class VoiceRecorder {
       
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          sampleRate: 24000,
+          sampleRate: 48000, // Increased from 24000 for better quality
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
@@ -27,7 +27,7 @@ export class VoiceRecorder {
       });
       
       this.audioContext = new AudioContext({
-        sampleRate: 24000,
+        sampleRate: 48000, // Matched with input for consistency
       });
       
       this.source = this.audioContext.createMediaStreamSource(this.stream);
@@ -49,7 +49,7 @@ export class VoiceRecorder {
       this.source.connect(this.processor);
       this.processor.connect(this.audioContext.destination);
       
-      console.log('Voice recording started');
+      console.log('Voice recording started with high quality settings');
     } catch (error) {
       console.error('Error accessing microphone:', error);
       this.isRecording = false;

@@ -168,11 +168,13 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
         const base64Audio = await blobToBase64(audioBlob);
         
         // Transcribe the audio using OpenAI
-        console.log('Transcribing audio...');
+        console.log('Transcribing audio with high-accuracy settings...');
         const transcribedText = await transcribeAudio(base64Audio);
+        
+        // Direct assignment without any manipulation to ensure exact speech
         setCommand(transcribedText);
         
-        // Process the command
+        // Process the command - pass the raw transcription without changes
         if (transcribedText && onCommand) {
           try {
             onCommand(transcribedText);
@@ -272,11 +274,14 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       
       recognitionRef.current.onresult = (event) => {
         console.log('Speech recognition result', event.results);
+        // Get the exact transcript without any processing
         const transcript = Array.from(event.results)
           .map(result => result[0])
           .map(result => result.transcript)
-          .join('');
+          .join(' ');
         
+        console.log('Raw transcript:', transcript);
+        // Use the exact text without any processing
         setCommand(transcript);
       };
       

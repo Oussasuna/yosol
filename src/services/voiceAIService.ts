@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -191,6 +190,7 @@ export const transcribeAudio = async (audioBase64: string): Promise<string> => {
     }
 
     console.log("Transcription received:", data.text);
+    // Return the exact transcription without any processing
     return data.text;
   } catch (error) {
     console.error('Voice transcription error:', error);
