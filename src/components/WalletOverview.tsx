@@ -108,7 +108,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
   // Calculate total portfolio value
   const calculateTotalValue = () => {
-    const solValue = balance * 100; // Assuming 1 SOL = $100 for simplicity
+    // Use a conservative SOL price estimate (can be replaced with actual price feed)
+    const solPrice = 150; // Approximate SOL price in USD
+    const solValue = balance * solPrice; 
     const tokensValue = tokens.reduce((total, token) => total + token.usdValue, 0);
     return solValue + tokensValue;
   };
@@ -193,7 +195,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           <h3 className="text-3xl font-bold">{balance.toFixed(4)} SOL</h3>
           <span className="ml-2 text-sm px-2 py-0.5 rounded-full bg-wallet-accent/20 text-wallet-accent">+12.5%</span>
         </div>
-        <p className="text-sm text-muted-foreground">≈ ${(balance * 100).toFixed(2)} USD</p>
+        <p className="text-sm text-muted-foreground">≈ ${(balance * 150).toFixed(2)} USD</p>
       </div>
 
       {isLoading ? (
@@ -215,7 +217,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
               <p className="text-2xl font-bold mb-1">${calculateTotalValue().toFixed(2)}</p>
               <div className="flex justify-between text-sm mt-3">
                 <span className="text-muted-foreground">SOL Balance</span>
-                <span>${(balance * 100).toFixed(2)}</span>
+                <span>${(balance * 150).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm mt-1">
                 <span className="text-muted-foreground">Token Value</span>
