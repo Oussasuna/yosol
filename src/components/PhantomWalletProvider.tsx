@@ -16,6 +16,7 @@ interface PhantomWalletContextType {
   handleReceive: () => void;
   isInitialized: boolean;
   isLoading: boolean;
+  refreshWalletData: () => Promise<void>;
 }
 
 export interface Token {
@@ -57,6 +58,7 @@ const PhantomWalletContext = createContext<PhantomWalletContextType>({
   handleReceive: () => {},
   isInitialized: false,
   isLoading: false,
+  refreshWalletData: async () => {},
 });
 
 export const usePhantomWallet = () => useContext(PhantomWalletContext);
@@ -81,7 +83,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
     try {
       console.log(`Fetching wallet data for address: ${address}`);
       
-      // Fetch SOL balance with error handling and retries
       let balanceData = null;
       let retryCount = 0;
       const maxRetries = 3;
@@ -115,24 +116,20 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
           console.error(`Balance fetch attempt ${retryCount + 1} failed:`, error);
           retryCount++;
           if (retryCount < maxRetries) {
-            // Wait before retry (exponential backoff)
             await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
           }
         }
       }
       
       if (balanceData?.result?.value) {
-        // Convert from lamports to SOL (1 SOL = 10^9 lamports)
         const solBalance = balanceData.result.value / 1000000000;
         console.log(`Wallet balance: ${solBalance} SOL`);
         setBalance(solBalance);
       } else {
         console.warn("Failed to fetch SOL balance after retries, using fallback or zero value");
-        // Keep existing balance or set to 0 if none exists
         setBalance(prev => prev || 0);
       }
 
-      // Fetch token balances, NFTs, and transactions in parallel
       await Promise.all([
         fetchTokens(address),
         fetchNFTs(address),
@@ -151,7 +148,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         variant: "destructive"
       });
       
-      // Provide minimal fallback data if everything fails
       if (balance === 0) setBalance(0.01);
     } finally {
       setIsLoading(false);
@@ -162,7 +158,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
     try {
       console.log("Fetching token data from Jupiter API");
       
-      // Use Jupiter API to fetch tokens (more reliable than RPC for token data)
       const response = await fetch(`https://quote-api.jup.ag/v6/user-holdings?wallet=${address}`);
       
       if (!response.ok) {
@@ -189,7 +184,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         
         if (mappedTokens.length === 0) {
           console.log("No tokens found, using minimal example data");
-          // If no tokens were found, set some example tokens with very small values
           setTokens([
             {
               symbol: "USDC",
@@ -205,7 +199,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
       }
     } catch (error) {
       console.error("Error fetching tokens:", error);
-      // Set minimal example token data
       setTokens([
         {
           symbol: "USDC",
@@ -222,7 +215,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
     try {
       console.log("Fetching NFT data from Helius API");
       
-      // Use Helius RPC for NFT data (public methods)
       const response = await fetch(`https://mainnet.helius-rpc.com/?api-key=15319107-6a6d-427d-abd3-fb708c9ac916`, {
         method: 'POST',
         headers: {
@@ -272,7 +264,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         
         if (mappedNFTs.length === 0) {
           console.log("No NFTs found, using example data");
-          // If no NFTs are found, use example data
           setNfts([
             {
               name: "Example NFT",
@@ -286,7 +277,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
       }
     } catch (error) {
       console.error("Error fetching NFTs:", error);
-      // Use example NFT data
       setNfts([
         {
           name: "Example NFT",
@@ -301,7 +291,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
     try {
       console.log("Fetching transaction history");
       
-      // Fetch recent transactions with retries
       let txData = null;
       let retryCount = 0;
       const maxRetries = 3;
@@ -335,17 +324,14 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
           console.error(`Transaction fetch attempt ${retryCount + 1} failed:`, error);
           retryCount++;
           if (retryCount < maxRetries) {
-            // Wait before retry (exponential backoff)
             await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
           }
         }
       }
       
       if (txData?.result && Array.isArray(txData.result) && txData.result.length > 0) {
-        // Process transaction data
         const processedTxs: Transaction[] = await Promise.all(
           txData.result.map(async (tx: any, index: number) => {
-            // Try to get transaction details to determine if it was a send or receive
             try {
               const txDetailsResponse = await fetch(`https://api.mainnet-beta.solana.com`, {
                 method: 'POST',
@@ -377,16 +363,13 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
                 
                 const isSender = transaction.transaction.message.accountKeys[0] === address;
                 
-                // Calculate the amount safely
                 let amount = 0;
                 if (transaction.meta && transaction.meta.postBalances && transaction.meta.preBalances) {
-                  // For the sender, the amount is the decrease in their balance
                   const preBalance = isSender ? transaction.meta.preBalances[0] : 0;
                   const postBalance = isSender ? transaction.meta.postBalances[0] : 0;
-                  amount = Math.abs(postBalance - preBalance) / 1000000000; // Convert lamports to SOL
+                  amount = Math.abs(postBalance - preBalance) / 1000000000;
                 }
                 
-                // Format recipient/sender addresses
                 const counterpartyAddress = isSender 
                   ? transaction.transaction.message.accountKeys[1] 
                   : transaction.transaction.message.accountKeys[0];
@@ -410,7 +393,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
               console.error("Error fetching transaction details:", err);
             }
             
-            // Fallback if we can't get detailed transaction info
             const randomNum = parseInt(tx.signature.slice(-6), 16) % 100;
             const isSend = randomNum > 50;
             
@@ -430,7 +412,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         setRecentTransactions(processedTxs);
       } else {
         console.log("No transactions found or failed to fetch, using example data");
-        // If no transactions found, provide example data
         const currentDate = new Date();
         const exampleTxs: Transaction[] = [];
         
@@ -455,7 +436,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
     } catch (error) {
       console.error("Error fetching transactions:", error);
       
-      // Provide example transaction data
       const currentDate = new Date();
       const exampleTxs: Transaction[] = [];
       
@@ -484,7 +464,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
       try {
         console.log("Initializing wallet connections");
         
-        // Initialize Solflare wallet
         const solflareWallet = new Solflare();
         
         solflareWallet.on('connect', () => {
@@ -526,26 +505,21 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         setSolflare(solflareWallet);
         setIsInitialized(true);
         
-        // Check if Solflare wallet is already connected
-        try {
-          if (typeof window !== 'undefined' && window.solflare?.isConnected) {
-            if (solflareWallet.isConnected && solflareWallet.publicKey) {
-              const address = solflareWallet.publicKey.toString();
-              console.log(`Solflare wallet already connected: ${address}`);
-              
-              setWalletAddress(address);
-              setWalletConnected(true);
-              setWalletType("Solflare");
-              fetchWalletData(address);
-              
-              toast({
-                title: "Wallet Connected",
-                description: "Your Solflare wallet is already connected",
-              });
-            }
+        if (typeof window !== 'undefined' && window.solflare?.isConnected) {
+          if (solflareWallet.isConnected && solflareWallet.publicKey) {
+            const address = solflareWallet.publicKey.toString();
+            console.log(`Solflare wallet already connected: ${address}`);
+            
+            setWalletAddress(address);
+            setWalletConnected(true);
+            setWalletType("Solflare");
+            fetchWalletData(address);
+            
+            toast({
+              title: "Wallet Connected",
+              description: "Your Solflare wallet is already connected",
+            });
           }
-        } catch (error) {
-          console.log("No existing Solflare connection");
         }
       } catch (error) {
         console.error("Failed to initialize wallets:", error);
@@ -554,7 +528,7 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
           description: "Could not initialize wallets. Using simulation mode.",
           variant: "destructive"
         });
-        setIsInitialized(true); // Still set initialized to prevent blocking UI
+        setIsInitialized(true);
       }
     };
 
@@ -570,7 +544,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
           variant: "destructive"
         });
 
-        // Use simulation data in case the actual wallet is not available
         const simulatedAddress = "7YWm5WGRnXEEtST4Vr8WkR2WnPvMxW7Ka5YrGKjNFNwW";
         setWalletAddress(simulatedAddress);
         setWalletConnected(true);
@@ -581,10 +554,12 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
 
       try {
         console.log("Attempting to connect Solflare wallet");
-        // Connect to Solflare
         await solflare.connect();
         
-        // The connection events will handle the state updates
+        toast({
+          title: "Wallet Connected",
+          description: "Your Solflare wallet is connected",
+        });
       } catch (error) {
         console.error("Failed to connect Solflare wallet:", error);
         toast({
@@ -593,7 +568,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
           variant: "destructive"
         });
         
-        // Offer simulation mode as fallback
         setTimeout(() => {
           const simulatedAddress = "7YWm5WGRnXEEtST4Vr8WkR2WnPvMxW7Ka5YrGKjNFNwW";
           setWalletAddress(simulatedAddress);
@@ -608,7 +582,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         }, 1000);
       }
     } else {
-      // Handle other wallet types in a generic way
       const simulatedWalletAddresses = {
         'Phantom': '6j1P2XMDvg6VrYZCXwwS6Z9YnAL3uA8zKHXwvuLkZAZd',
         'Magic Eden': '8orM5QfgzVjxfhVWMwMmoHRYyHgNBGscTTRN12Xgx3Vt',
@@ -675,7 +648,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
     
     if (walletType === "Solflare" && solflare) {
       try {
-        // In a real implementation, you would create a transaction and use solflare.signAndSendTransaction()
         toast({
           title: "Send Request",
           description: "Please create a transaction to send through Solflare.",
@@ -707,7 +679,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
     }
     
     if (walletAddress) {
-      // Copy address to clipboard
       navigator.clipboard.writeText(walletAddress);
       toast({
         title: "Receive Address Ready",
@@ -721,16 +692,14 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
     }
   };
 
-  const refreshWalletData = () => {
+  const refreshWalletData = async () => {
     if (walletAddress) {
       console.log("Manually refreshing wallet data");
-      fetchWalletData(walletAddress);
+      await fetchWalletData(walletAddress);
       
-      toast({
-        title: "Refreshing Wallet Data",
-        description: "Fetching latest wallet information...",
-      });
+      return Promise.resolve();
     }
+    return Promise.resolve();
   };
 
   return (
@@ -749,6 +718,7 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         handleReceive,
         isInitialized,
         isLoading,
+        refreshWalletData,
       }}
     >
       {children}

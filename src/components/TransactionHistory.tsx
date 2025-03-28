@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowUp, ArrowDown, Wallet, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { usePhantomWallet } from './PhantomWalletProvider';
@@ -32,7 +31,6 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     refreshWalletData
   } = usePhantomWallet();
   
-  // Use props if provided, otherwise fall back to context values
   const walletConnected = propWalletConnected !== undefined ? propWalletConnected : contextWalletConnected;
   const walletAddress = propWalletAddress !== null ? propWalletAddress : contextWalletAddress;
   const transactions = contextTransactions || [];
@@ -45,14 +43,12 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   useEffect(() => {
     setIsVisible(true);
     
-    // Animate items after they're loaded
     if (transactions.length > 0) {
       const ids = transactions.map(tx => tx.id);
       setAnimatedItems(ids);
     }
   }, [transactions]);
 
-  // Auto-refresh transaction data every 30 seconds if wallet is connected
   useEffect(() => {
     if (!walletConnected) return;
     
