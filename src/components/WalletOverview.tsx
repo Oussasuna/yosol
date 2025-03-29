@@ -48,7 +48,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     refreshWalletData
   } = usePhantomWallet();
   
-  // Use props if provided, otherwise fall back to context values
   const walletConnected = propWalletConnected !== undefined ? propWalletConnected : contextWalletConnected;
   const walletAddress = propWalletAddress !== null ? propWalletAddress : contextWalletAddress;
   const walletType = propWalletType !== null ? propWalletType : contextWalletType;
@@ -65,14 +64,16 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   const [activeTab, setActiveTab] = useState("balance");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Use the isRefreshing prop if provided, otherwise use local state
+  const shortAddress = walletAddress 
+    ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
+    : '';
+
   const refreshingState = propIsRefreshing !== undefined ? propIsRefreshing : isRefreshing;
 
   useEffect(() => {
     setIsVisible(true);
     console.log("WalletOverview received address:", walletAddress);
     
-    // Auto-refresh wallet data every 15 seconds
     if (walletConnected && refreshWalletData) {
       const refreshInterval = setInterval(() => {
         refreshWalletData().catch(error => {
@@ -110,7 +111,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     }
     setTimeout(() => setIsLoadingSend(false), 1000);
     
-    // Voice feedback for this action
     if (handleVoiceCommand) {
       handleVoiceCommand("preparing to send SOL");
     }
@@ -130,7 +130,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     }
     setTimeout(() => setIsLoadingReceive(false), 1000);
     
-    // Voice feedback for this action
     if (handleVoiceCommand) {
       handleVoiceCommand("ready to receive SOL");
     }
@@ -147,7 +146,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             title: "Wallet Refreshed",
             description: "Your wallet data has been updated.",
           });
-          // Voice feedback for this action
           if (handleVoiceCommand) {
             handleVoiceCommand("wallet data refreshed");
           }
@@ -167,7 +165,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   };
 
   const calculateTotalValue = () => {
-    const solPrice = 150; // Approximate SOL price in USD
+    const solPrice = 150;
     const solValue = balance * solPrice; 
     const tokensValue = tokens.reduce((total, token) => total + token.usdValue, 0);
     return solValue + tokensValue;
