@@ -1,13 +1,15 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume, VolumeX, AlertTriangle } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { RecordAudio } from '@/utils/VoiceRecorder';
-import { convertAudioToText, convertTextToAudio } from '@/services/voiceAIService';
-
-// Define service status types
-type ServiceStatus = 'online' | 'offline' | 'partial';
+import { 
+  convertAudioToText, 
+  convertTextToAudio,
+  ServiceStatus
+} from '@/services/voiceAIService';
 
 // Define constants for service status
 const ONLINE_STATUS: ServiceStatus = 'online';
@@ -17,11 +19,20 @@ const PARTIAL_STATUS: ServiceStatus = 'partial';
 interface VoiceInterfaceProps {
   className?: string;
   onVoiceCommand?: (command: string) => void;
+  // Add compatibility with onCommand for ease of use
+  onCommand?: (command: string) => void;
+  walletConnected?: boolean;
+  walletBalance?: number;
+  walletAddress?: string;
 }
 
 const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ 
   className,
-  onVoiceCommand 
+  onVoiceCommand,
+  onCommand,
+  walletConnected,
+  walletBalance,
+  walletAddress
 }) => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -155,10 +166,19 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
       // Process the command
       if (onVoiceCommand) {
         onVoiceCommand(text);
+      } else if (onCommand) {
+        // For backward compatibility
+        onCommand(text);
       }
       
       // Generate a response (this would be more sophisticated in a real app)
-      const aiResponse = `I heard: "${text}". Processing your request...`;
+      let aiResponse = `I heard: "${text}". Processing your request...`;
+      
+      // Add more context if wallet info is available
+      if (walletConnected) {
+        aiResponse += ` Your wallet balance is ${walletBalance} SOL.`;
+      }
+      
       setResponse(aiResponse);
       
       // Convert response to speech
@@ -218,7 +238,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
     setShowStatus(!showStatus);
   };
 
-  // Keep the existing status rendering function, but update the comparison
+  // Render service status indicators
   const renderServiceStatus = () => {
     if (!showStatus) return null;
 
@@ -296,6 +316,23 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
       )}
       
       {renderServiceStatus()}
+
+      <style jsx>{`
+        .status-indicator {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+        }
+        .status-indicator-online {
+          background-color: #10b981;
+        }
+        .status-indicator-offline {
+          background-color: #ef4444;
+        }
+        .status-indicator-partial {
+          background-color: #f59e0b;
+        }
+      `}</style>
     </div>
   );
 };

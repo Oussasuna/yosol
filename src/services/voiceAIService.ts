@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -264,6 +263,49 @@ export const playAudioFromBase64 = async (base64Audio: string): Promise<void> =>
     description: "Could not play audio response. Check your audio settings.",
     variant: "destructive"
   });
+};
+
+/**
+ * Convert audio to text by first converting blob to base64, then transcribing
+ */
+export const convertAudioToText = async (audioBlob: Blob): Promise<string> => {
+  try {
+    // Convert blob to base64
+    const base64Audio = await blobToBase64(audioBlob);
+    
+    // Transcribe the audio using the existing transcribeAudio function
+    return await transcribeAudio(base64Audio);
+  } catch (error) {
+    console.error('Error converting audio to text:', error);
+    throw error;
+  }
+};
+
+/**
+ * Convert text to audio by calling the TTS API and returning a blob
+ */
+export const convertTextToAudio = async (text: string, voice = OPENAI_VOICES.ALLOY): Promise<Blob> => {
+  try {
+    // Use the existing textToSpeech function to get base64 audio
+    const base64Audio = await textToSpeech(text, voice);
+    
+    if (!base64Audio) {
+      throw new Error('No audio data returned');
+    }
+    
+    // Convert base64 to binary
+    const binaryString = atob(base64Audio);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    // Create and return a blob
+    return new Blob([bytes], { type: 'audio/mp3' });
+  } catch (error) {
+    console.error('Error converting text to audio:', error);
+    throw error;
+  }
 };
 
 /**
