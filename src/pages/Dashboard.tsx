@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import WalletOverview from '../components/WalletOverview';
 import TransactionHistory from '../components/TransactionHistory';
@@ -8,11 +7,43 @@ import AIAssistant from '../components/AIAssistant';
 import AssemblyAITranscriber from '../components/AssemblyAITranscriber';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePhantomWallet } from '../components/PhantomWalletProvider';
+import { toast } from '@/components/ui/use-toast';
 
 const Dashboard = () => {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { refreshWalletData } = usePhantomWallet();
+
   const handleVoiceCommand = (command: string) => {
     console.log('Voice command received:', command);
-    // Handle voice commands here
+    
+    // Handle refresh wallet command
+    if (command.toLowerCase().includes('refresh') && command.toLowerCase().includes('wallet')) {
+      handleRefreshWallet();
+    }
+    // Other voice commands can be handled here
+  };
+
+  const handleRefreshWallet = async () => {
+    if (!refreshWalletData) return;
+    
+    setIsRefreshing(true);
+    try {
+      await refreshWalletData();
+      toast({
+        title: "Wallet Refreshed",
+        description: "Your wallet data has been updated.",
+      });
+    } catch (error) {
+      console.error('Error refreshing wallet data:', error);
+      toast({
+        title: "Refresh Failed",
+        description: "Could not update wallet data. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   return (
@@ -24,7 +55,11 @@ const Dashboard = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="md:col-span-2">
-            <WalletOverview />
+            <WalletOverview 
+              handleVoiceCommand={handleVoiceCommand}
+              onRefresh={handleRefreshWallet}
+              isRefreshing={isRefreshing}
+            />
           </div>
           <div>
             <Card>

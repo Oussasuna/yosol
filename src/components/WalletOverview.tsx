@@ -19,6 +19,8 @@ interface WalletOverviewProps {
   onSend?: () => void;
   onReceive?: () => void;
   handleVoiceCommand?: (command: string) => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 const WalletOverview: React.FC<WalletOverviewProps> = ({ 
@@ -28,7 +30,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   balance: propBalance,
   onSend,
   onReceive,
-  handleVoiceCommand
+  handleVoiceCommand,
+  onRefresh,
+  isRefreshing: propIsRefreshing
 }) => {
   const { 
     walletConnected: contextWalletConnected, 
@@ -56,11 +60,13 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   
   const [isCopied, setIsCopied] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const shortAddress = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : '';
   const [isLoadingSend, setIsLoadingSend] = useState(false);
   const [isLoadingReceive, setIsLoadingReceive] = useState(false);
   const [activeTab, setActiveTab] = useState("balance");
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Use the isRefreshing prop if provided, otherwise use local state
+  const refreshingState = propIsRefreshing !== undefined ? propIsRefreshing : isRefreshing;
 
   useEffect(() => {
     setIsVisible(true);
@@ -131,31 +137,33 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   };
 
   const handleManualRefresh = () => {
-    if (!refreshWalletData) return;
-    
-    setIsRefreshing(true);
-    refreshWalletData()
-      .then(() => {
-        toast({
-          title: "Wallet Refreshed",
-          description: "Your wallet data has been updated.",
+    if (onRefresh) {
+      onRefresh();
+    } else if (refreshWalletData) {
+      setIsRefreshing(true);
+      refreshWalletData()
+        .then(() => {
+          toast({
+            title: "Wallet Refreshed",
+            description: "Your wallet data has been updated.",
+          });
+          // Voice feedback for this action
+          if (handleVoiceCommand) {
+            handleVoiceCommand("wallet data refreshed");
+          }
+        })
+        .catch(error => {
+          console.error('Error refreshing wallet data:', error);
+          toast({
+            title: "Refresh Failed",
+            description: "Could not update wallet data. Please try again.",
+            variant: "destructive"
+          });
+        })
+        .finally(() => {
+          setIsRefreshing(false);
         });
-        // Voice feedback for this action
-        if (handleVoiceCommand) {
-          handleVoiceCommand("wallet data refreshed");
-        }
-      })
-      .catch(error => {
-        console.error('Error refreshing wallet data:', error);
-        toast({
-          title: "Refresh Failed",
-          description: "Could not update wallet data. Please try again.",
-          variant: "destructive"
-        });
-      })
-      .finally(() => {
-        setIsRefreshing(false);
-      });
+    }
   };
 
   const calculateTotalValue = () => {
@@ -214,9 +222,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             size="sm" 
             className="gap-1 bg-white/5 hover:bg-white/10"
             onClick={handleManualRefresh}
-            disabled={isRefreshing}
+            disabled={refreshingState}
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${refreshingState ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">Refresh</span>
           </Button>
           <Button 
