@@ -37,21 +37,21 @@ refresh_token_reuse_interval = 10
 [realtime]
 enabled = true
 
-[edge_functions]
+[functions]
 enabled = true
 
-[[edge_functions.routes]]
+[[functions.http]]
 pattern = "voice-to-text"
-function_name = "voice-to-text"
+function = "voice-to-text"
 
-[[edge_functions.routes]]
+[[functions.http]]
 pattern = "text-to-voice"
-function_name = "text-to-voice"
+function = "text-to-voice"
 
-[[edge_functions.routes]]
+[[functions.http]]
 pattern = "assembly-transcribe"
-function_name = "assembly-transcribe"
+function = "assembly-transcribe"
 
-[[edge_functions.routes]]
+[[functions.http]]
 pattern = "assembly-transcript-status"
-function_name = "assembly-transcript-status"
+function = "assembly-transcript-status"

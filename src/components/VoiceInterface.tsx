@@ -316,7 +316,8 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
       
       {renderServiceStatus()}
 
-      <style jsx>{`
+      <style>
+        {`
         .status-indicator {
           width: 8px;
           height: 8px;
@@ -331,7 +332,8 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
         .status-indicator-partial {
           background-color: #f59e0b;
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };

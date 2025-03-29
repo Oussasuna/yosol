@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mic, Upload, Link as LinkIcon, Play, Stop, Loader2 } from 'lucide-react';
+import { Mic, Upload, Link as LinkIcon, Play, Square, Loader2 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { RecordAudio } from '@/utils/VoiceRecorder';
 import { transcribeAudio, transcribeAudioUrl } from '@/services/assemblyAIService';
@@ -220,7 +220,7 @@ const AssemblyAITranscriber: React.FC = () => {
                 onClick={isRecording ? stopRecording : startRecording}
                 disabled={isTranscribing}
               >
-                {isRecording ? <Stop className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+                {isRecording ? <Square className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
               </Button>
               <p className="mt-4 text-sm text-muted-foreground">
                 {isRecording ? "Recording... Click to stop" : "Click to start recording"}

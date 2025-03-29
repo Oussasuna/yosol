@@ -1,3 +1,4 @@
+
 // Define a class for recording audio
 export class RecordAudio {
   private mediaRecorder: MediaRecorder | null = null;
