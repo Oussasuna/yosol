@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume, VolumeX, AlertTriangle } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
@@ -15,9 +16,17 @@ import {
 
 interface VoiceInterfaceProps {
   onCommand?: (command: string) => void;
+  walletConnected?: boolean;
+  walletBalance?: number;
+  walletAddress?: string | null;
 }
 
-const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
+const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ 
+  onCommand, 
+  walletConnected = false,
+  walletBalance = 243.75,
+  walletAddress = null
+}) => {
   const [isListening, setIsListening] = useState(false);
   const [command, setCommand] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
@@ -31,13 +40,18 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   const recorderRef = useRef<VoiceRecorder | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<number | null>(null);
+  
+  // Define constants for service status to prevent TypeScript errors
+  const OFFLINE_STATUS: ServiceStatus = 'offline';
+  const ONLINE_STATUS: ServiceStatus = 'online';
+  const PARTIAL_STATUS: ServiceStatus = 'partial';
 
   useEffect(() => {
     const resetTimer = setInterval(() => {
       if (errorCount > 0) {
         setErrorCount(0);
-        if (serviceStatus !== 'online') {
-          setServiceStatus('online');
+        if (serviceStatus !== ONLINE_STATUS) {
+          setServiceStatus(ONLINE_STATUS);
           console.log('Voice service status reset to online, retrying AI services');
         }
       }
@@ -105,7 +119,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
             testResponse.error.message.includes('exceeded')
           )) {
             console.log('Voice service quota exceeded, enabling simulation mode');
-            setServiceStatus('offline');
+            setServiceStatus(OFFLINE_STATUS);
             setIsUsingAI(false);
           }
         }
@@ -113,6 +127,8 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
         console.warn('Voice service test failed:', error);
       }
     };
+    
+    initVoiceSupport();
     
     setTimeout(() => {
       testVoiceServices();
@@ -144,8 +160,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
     setCommand('Listening...');
     setProcessingStatus('idle');
     
-    const offlineStatus: ServiceStatus = 'offline';
-    if (serviceStatus === offlineStatus || errorCount >= 3) {
+    if (serviceStatus === OFFLINE_STATUS || errorCount >= 3) {
       console.log('Voice service is offline or too many errors, using simulation mode');
       simulateVoiceRecognition();
       return;
@@ -200,7 +215,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   const handleStopListening = async () => {
     console.log('Stopping listening process, using AI:', isUsingAI, 'service status:', serviceStatus);
     
-    if (isUsingAI && recorderRef.current && serviceStatus === 'online') {
+    if (isUsingAI && recorderRef.current && serviceStatus === ONLINE_STATUS) {
       try {
         setIsListening(false);
         setIsAnimating(false);
@@ -231,7 +246,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
             onCommand(transcribedText);
             setProcessingStatus('completed');
             
-            if (!isMuted && serviceStatus !== 'offline') {
+            if (!isMuted && serviceStatus !== OFFLINE_STATUS) {
               respondWithVoice(transcribedText);
             }
           } catch (error) {
@@ -247,7 +262,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
         setErrorCount(count => count + 1);
         
         if (errorCount >= 2) {
-          setServiceStatus('offline');
+          setServiceStatus(OFFLINE_STATUS);
           setIsUsingAI(false);
           toast({
             title: "Voice Service Offline",
@@ -264,7 +279,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
         
         simulateVoiceRecognition();
       }
-    } else if (recognitionRef.current && isBrowserSupported && serviceStatus !== 'offline') {
+    } else if (recognitionRef.current && isBrowserSupported && serviceStatus !== OFFLINE_STATUS) {
       try {
         recognitionRef.current.stop();
         console.log("Native speech recognition stopped");
@@ -291,8 +306,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   };
 
   const respondWithVoice = async (userCommand: string) => {
-    const offlineStatus: ServiceStatus = 'offline';
-    if (serviceStatus === offlineStatus) {
+    if (serviceStatus === OFFLINE_STATUS) {
       console.log('Voice service is offline, skipping voice response');
       return;
     }
@@ -302,16 +316,30 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       
       const lowerCommand = userCommand.toLowerCase();
       
+      // More wallet-focused responses
       if (lowerCommand.includes('balance') || lowerCommand.includes('sol')) {
-        responseText = "Your current balance is 243.75 SOL, equivalent to approximately 24,375 dollars.";
+        responseText = `Your current balance is ${walletBalance} SOL, equivalent to approximately ${walletBalance * 100} dollars.`;
+      } else if (lowerCommand.includes('wallet address') || lowerCommand.includes('my address')) {
+        const shortenedAddress = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : "not available";
+        responseText = `Your wallet address is ${shortenedAddress}. Would you like me to copy it to clipboard?`;
       } else if (lowerCommand.includes('stake') || lowerCommand.includes('staking')) {
-        responseText = "I've prepared a transaction to stake SOL. Please confirm the details on screen.";
+        responseText = `I've prepared a transaction to stake SOL. Please confirm the details on screen.`;
       } else if (lowerCommand.includes('send') || lowerCommand.includes('transfer')) {
-        responseText = "I've prepared a transfer. Please review the recipient and amount on screen.";
+        responseText = `I've prepared a transfer. Please review the recipient and amount on screen.`;
       } else if (lowerCommand.includes('market') || lowerCommand.includes('price')) {
         responseText = "Solana is currently up 12.5% in the last 24 hours. The overall market sentiment is positive.";
       } else if (lowerCommand.includes('alert') || lowerCommand.includes('notification')) {
         responseText = "Price alert set. You'll be notified when SOL reaches your target price.";
+      } else if (lowerCommand.includes('connect') || lowerCommand.includes('wallet')) {
+        if (walletConnected) {
+          responseText = "Your wallet is already connected. Is there anything specific you'd like to do with it?";
+        } else {
+          responseText = "Please select a wallet provider to connect with from the options on screen.";
+        }
+      } else if (lowerCommand.includes('disconnect')) {
+        responseText = "Your wallet has been disconnected. You can connect again anytime.";
+      } else if (lowerCommand.includes('transaction') || lowerCommand.includes('history')) {
+        responseText = "I'm displaying your recent transactions now. Would you like me to filter them in any way?";
       } else {
         responseText = "I've processed your command. Is there anything else you'd like to do with your wallet?";
       }
@@ -335,7 +363,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       setErrorCount(count => count + 1);
       
       if (errorCount >= 2) {
-        setServiceStatus('offline');
+        setServiceStatus(OFFLINE_STATUS);
       }
     }
   };
@@ -373,7 +401,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
               onCommand(command);
               setProcessingStatus('completed');
               
-              if (!isMuted && serviceStatus !== 'offline') {
+              if (!isMuted && serviceStatus !== OFFLINE_STATUS) {
                 respondWithVoice(command);
               }
             } catch (error) {
@@ -408,7 +436,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
         }
       };
     }
-  }, [command, onCommand, isMuted, serviceStatus, errorCount]);
+  }, [command, onCommand, isMuted, serviceStatus, errorCount, walletConnected]);
 
   const simulateVoiceRecognition = () => {
     console.log("Using simulated voice recognition");
@@ -418,6 +446,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
     setProcessingStatus('idle');
     
     timeoutRef.current = window.setTimeout(() => {
+      // More wallet-specific examples
       const exampleCommands = [
         'Show me my SOL balance',
         'Check the current Solana price',
@@ -425,7 +454,10 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
         'Send 5 SOL to wallet ending in 7X4F',
         'Show me my recent transactions',
         'What NFTs do I own?',
-        'Set a price alert for SOL at $150'
+        'Set a price alert for SOL at $150',
+        'What\'s my wallet address?',
+        'Connect my Phantom wallet',
+        'Show me my staking rewards'
       ];
       const randomCommand = exampleCommands[Math.floor(Math.random() * exampleCommands.length)];
       setCommand(randomCommand);
@@ -441,19 +473,24 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
               onCommand(randomCommand);
               setProcessingStatus('completed');
               
-              if (!isMuted && serviceStatus !== 'offline') {
+              if (!isMuted && serviceStatus !== OFFLINE_STATUS) {
                 respondWithVoice(randomCommand);
               } else {
                 let responseText = "";
                 
                 if (randomCommand.includes('balance') || randomCommand.includes('SOL')) {
-                  responseText = "Your current balance is 243.75 SOL (approximately $24,375)";
+                  responseText = `Your current balance is ${walletBalance} SOL (approximately $${walletBalance * 100})`;
                 } else if (randomCommand.includes('stake')) {
                   responseText = "Prepared a staking transaction of 10 SOL";
                 } else if (randomCommand.includes('send')) {
                   responseText = "Prepared to send 5 SOL to specified wallet";
                 } else if (randomCommand.includes('price')) {
                   responseText = "SOL is currently at $100, up 12.5% in 24 hours";
+                } else if (randomCommand.includes('address')) {
+                  const shortenedAddress = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : "not available";
+                  responseText = `Your wallet address is ${shortenedAddress}`;
+                } else if (randomCommand.includes('connect')) {
+                  responseText = walletConnected ? "Your wallet is already connected" : "Please select a wallet to connect";
                 } else {
                   responseText = "Command processed successfully";
                 }
@@ -559,16 +596,16 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   return (
     <div className="glass-card p-6 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-medium">Voice Assistant</h3>
+        <h3 className="text-xl font-medium">Wallet Voice Assistant</h3>
         <div className="flex items-center gap-2">
           <span className={`text-xs text-muted-foreground px-2 py-1 rounded ${
-            serviceStatus === 'offline' 
+            serviceStatus === OFFLINE_STATUS 
               ? 'bg-red-500/20 text-red-300' 
-              : serviceStatus === 'partial' 
+              : serviceStatus === PARTIAL_STATUS 
                 ? 'bg-yellow-500/20 text-yellow-300'
                 : 'bg-white/10'
           }`}>
-            {serviceStatus === 'offline' 
+            {serviceStatus === OFFLINE_STATUS 
               ? 'Simulation Mode' 
               : isUsingAI 
                 ? 'AI Voice' 
@@ -584,7 +621,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
         </div>
       </div>
       
-      {serviceStatus === 'offline' && (
+      {serviceStatus === OFFLINE_STATUS && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-md p-3 mb-4 flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
           <div className="text-sm">
@@ -596,11 +633,11 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       
       <div className="text-center mb-4">
         <p className="text-sm text-muted-foreground">
-          {serviceStatus === 'offline'
-            ? "Press and hold to simulate a voice command"
+          {serviceStatus === OFFLINE_STATUS
+            ? "Press and hold to simulate a wallet voice command"
             : isBrowserSupported 
-              ? "Press and hold to speak a command" 
-              : "Press and hold to simulate a voice command"}
+              ? "Press and hold to speak a wallet command" 
+              : "Press and hold to simulate a wallet voice command"}
         </p>
       </div>
       
@@ -667,7 +704,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
       )}
 
       <div className="mt-6 text-center">
-        <p className="text-xs text-muted-foreground mb-2">Try: "Show my balance", "Check price", "Stake tokens", "Send SOL"</p>
+        <p className="text-xs text-muted-foreground mb-2">Try: "Show my balance", "Check price", "Stake tokens", "Send SOL", "What's my wallet address?"</p>
         <div className="flex justify-center gap-2 mt-2">
           {!isBrowserSupported && (
             <button 
@@ -677,7 +714,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
               Try a test command
             </button>
           )}
-          {serviceStatus !== 'offline' && (
+          {serviceStatus !== OFFLINE_STATUS && (
             <button 
               onClick={enableSimulationMode}
               className="text-xs text-muted-foreground hover:underline"

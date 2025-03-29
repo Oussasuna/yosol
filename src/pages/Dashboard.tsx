@@ -54,6 +54,7 @@ const Dashboard = () => {
   const [walletConnected, setWalletConnected] = useState(false);
   const [connectedWalletType, setConnectedWalletType] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number>(243.75);
   const [isCopied, setIsCopied] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [showWalletDialog, setShowWalletDialog] = useState(false);
@@ -112,6 +113,29 @@ const Dashboard = () => {
         });
         return;
       }
+    }
+    
+    // Process wallet address command
+    if (lowerCommand.includes('address') || (lowerCommand.includes('my') && lowerCommand.includes('wallet'))) {
+      if (!walletConnected) {
+        toast({
+          title: "Wallet Not Connected",
+          description: "Please connect your wallet first to view your address.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (walletAddress) {
+        navigator.clipboard.writeText(walletAddress);
+        const shortenedAddress = `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
+        toast({
+          title: "Wallet Address",
+          description: `Your address is ${shortenedAddress} and has been copied to clipboard.`,
+          variant: "default"
+        });
+      }
+      return;
     }
     
     // Process send command
@@ -199,7 +223,7 @@ const Dashboard = () => {
       
       toast({
         title: "Balance Information",
-        description: "Your current balance is 243.75 SOL (≈ $24,375.00)",
+        description: `Your current balance is ${walletBalance} SOL (≈ $${(walletBalance * 100).toFixed(2)})`,
         variant: "default"
       });
       return;
@@ -264,10 +288,10 @@ const Dashboard = () => {
     // Unknown or general command
     toast({
       title: "Command Processed",
-      description: `I understood: "${command}". How else can I assist you?`,
+      description: `I understood: "${command}". How else can I assist you with your wallet?`,
       variant: "default"
     });
-  }, [walletConnected, refreshWalletData]);
+  }, [walletConnected, refreshWalletData, walletAddress, walletBalance]);
 
   const generateRandomWalletAddress = () => {
     const characters = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
@@ -591,7 +615,12 @@ const Dashboard = () => {
             />
           </div>
           <div>
-            <VoiceInterface onCommand={handleVoiceCommand} />
+            <VoiceInterface 
+              onCommand={handleVoiceCommand} 
+              walletConnected={walletConnected}
+              walletBalance={walletBalance}
+              walletAddress={walletAddress}
+            />
           </div>
         </div>
         
