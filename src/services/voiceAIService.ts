@@ -12,6 +12,9 @@ export const OPENAI_VOICES = {
   SHIMMER: 'shimmer'
 };
 
+// Define service status types
+export type ServiceStatus = 'online' | 'partial' | 'offline';
+
 /**
  * Convert Float32Array audio data to a Blob for sending to server
  */

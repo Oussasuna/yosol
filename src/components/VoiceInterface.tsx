@@ -9,7 +9,8 @@ import {
   transcribeAudio, 
   textToSpeech, 
   playAudioFromBase64,
-  OPENAI_VOICES
+  OPENAI_VOICES,
+  type ServiceStatus
 } from '@/services/voiceAIService';
 
 interface VoiceInterfaceProps {
@@ -24,7 +25,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   const [isBrowserSupported, setIsBrowserSupported] = useState(true);
   const [processingStatus, setProcessingStatus] = useState<'idle' | 'processing' | 'completed' | 'error'>('idle');
   const [isUsingAI, setIsUsingAI] = useState(true);
-  const [serviceStatus, setServiceStatus] = useState<'online' | 'partial' | 'offline'>('online');
+  const [serviceStatus, setServiceStatus] = useState<ServiceStatus>('online');
   const [errorCount, setErrorCount] = useState(0);
   
   const recorderRef = useRef<VoiceRecorder | null>(null);
