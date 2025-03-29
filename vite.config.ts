@@ -20,4 +20,20 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      external: [
+        'rpc-websockets/dist/lib/client',
+        'fs',
+        'os',
+        'path',
+        'util',
+        'crypto',
+        'events',
+        'stream',
+        'buffer',
+        'http'
+      ],
+    },
+  },
 }));
