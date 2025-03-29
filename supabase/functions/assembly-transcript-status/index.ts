@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const assemblyApiKey = Deno.env.get("abdf5692c84c4672a448c76c6024f2cc");
+const assemblyApiKey = Deno.env.get("ASSEMBLY_API_KEY");
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

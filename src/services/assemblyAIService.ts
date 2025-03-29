@@ -8,7 +8,7 @@ import { toast } from "@/components/ui/use-toast";
 export const transcribeAudio = async (
   audioFile: Blob, 
   onProgressUpdate?: (status: string) => void
-): Promise<string> {
+): Promise<string> => {
   try {
     onProgressUpdate?.('Converting audio to base64...');
     
@@ -48,7 +48,7 @@ export const transcribeAudio = async (
 export const transcribeAudioUrl = async (
   audioUrl: string,
   onProgressUpdate?: (status: string) => void
-): Promise<string> {
+): Promise<string> => {
   try {
     onProgressUpdate?.('Submitting URL for transcription...');
     
