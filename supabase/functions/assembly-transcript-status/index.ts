@@ -1,12 +1,12 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+const assemblyApiKey = Deno.env.get("abdf5692c84c4672a448c76c6024f2cc");
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const ASSEMBLY_API_KEY = Deno.env.get('ASSEMBLY_API_KEY');
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -16,42 +16,40 @@ serve(async (req) => {
 
   try {
     const { transcriptId } = await req.json();
-    
-    if (!ASSEMBLY_API_KEY) {
-      console.error("Assembly AI API key is not set");
-      throw new Error('Assembly AI API key is not configured');
-    }
 
     if (!transcriptId) {
-      throw new Error('Transcript ID is required');
+      throw new Error('No transcript ID provided');
     }
 
-    console.log(`Checking status of transcript ID: ${transcriptId}`);
-    
-    // Check the status of the transcription
-    const response = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
+    // Check transcript status
+    const apiUrl = `https://api.assemblyai.com/v2/transcript/${transcriptId}`;
+    const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
-        'Authorization': ASSEMBLY_API_KEY,
+        'Authorization': assemblyApiKey || '',
+        'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Assembly AI error: ${errorText}`);
-      throw new Error(`Assembly AI error: ${errorText}`);
+      throw new Error(`AssemblyAI API error: ${errorText}`);
     }
 
-    const result = await response.json();
-    console.log(`Transcript status: ${result.status}`);
+    const data = await response.json();
     
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify({
+        transcriptId: data.id,
+        status: data.status,
+        text: data.text,
+        error: data.error,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error("Error in assembly-transcript-status function:", error);
+    console.error('Error in assembly-transcript-status function:', error);
     return new Response(
       JSON.stringify({ error: error.message || "Unknown error occurred" }),
       {

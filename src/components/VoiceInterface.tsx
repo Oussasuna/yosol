@@ -10,7 +10,6 @@ import {
   ServiceStatus
 } from '@/services/voiceAIService';
 
-// Define constants for service status
 const ONLINE_STATUS: ServiceStatus = 'online';
 const OFFLINE_STATUS: ServiceStatus = 'offline';
 const PARTIAL_STATUS: ServiceStatus = 'partial';
@@ -18,7 +17,6 @@ const PARTIAL_STATUS: ServiceStatus = 'partial';
 interface VoiceInterfaceProps {
   className?: string;
   onVoiceCommand?: (command: string) => void;
-  // Add compatibility with onCommand for ease of use
   onCommand?: (command: string) => void;
   walletConnected?: boolean;
   walletBalance?: number;
@@ -44,14 +42,12 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const recorderRef = useRef<RecordAudio | null>(null);
   
-  // Initialize audio element
   useEffect(() => {
     audioRef.current = new Audio();
     audioRef.current.onended = () => {
       setIsSpeaking(false);
     };
     
-    // Check services status
     checkServicesStatus();
     
     return () => {
@@ -67,8 +63,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
   
   const checkServicesStatus = async () => {
     try {
-      // This would be a real API call in production
-      // For now, simulate a check with a timeout
       setTimeout(() => {
         setSTTStatus(ONLINE_STATUS);
         setTTSStatus(ONLINE_STATUS);
@@ -102,12 +96,10 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
       setIsListening(true);
       setTranscript('');
       
-      // Initialize recorder if not already done
       if (!recorderRef.current) {
         recorderRef.current = new RecordAudio();
       }
       
-      // Start recording
       await recorderRef.current.startRecording();
       
       toast({
@@ -131,10 +123,8 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
     try {
       setIsListening(false);
       
-      // Stop recording and get audio blob
       const audioBlob = await recorderRef.current.stopRecording();
       
-      // Process the audio
       processAudioInput(audioBlob);
     } catch (error) {
       console.error('Error stopping voice recording:', error);
@@ -148,7 +138,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
   
   const processAudioInput = async (audioBlob: Blob) => {
     try {
-      // Convert audio to text
       const text = await convertAudioToText(audioBlob);
       
       if (!text || text.trim() === '') {
@@ -162,25 +151,20 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
       
       setTranscript(text);
       
-      // Process the command
       if (onVoiceCommand) {
         onVoiceCommand(text);
       } else if (onCommand) {
-        // For backward compatibility
         onCommand(text);
       }
       
-      // Generate a response (this would be more sophisticated in a real app)
       let aiResponse = `I heard: "${text}". Processing your request...`;
       
-      // Add more context if wallet info is available
       if (walletConnected) {
         aiResponse += ` Your wallet balance is ${walletBalance} SOL.`;
       }
       
       setResponse(aiResponse);
       
-      // Convert response to speech
       speakResponse(aiResponse);
     } catch (error) {
       console.error('Error processing audio:', error);
@@ -205,10 +189,8 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
     try {
       setIsSpeaking(true);
       
-      // Convert text to audio
       const audioBlob = await convertTextToAudio(text);
       
-      // Play the audio
       if (audioRef.current) {
         const audioUrl = URL.createObjectURL(audioBlob);
         audioRef.current.src = audioUrl;
@@ -237,7 +219,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
     setShowStatus(!showStatus);
   };
 
-  // Render service status indicators
   const renderServiceStatus = () => {
     if (!showStatus) return null;
 

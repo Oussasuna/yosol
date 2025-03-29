@@ -2,114 +2,137 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
-export interface TranscriptionResult {
-  id: string;
-  text: string;
-  status: 'queued' | 'processing' | 'completed' | 'error';
-  error?: string;
-  words?: Array<{
-    text: string;
-    start: number;
-    end: number;
-    confidence: number;
-  }>;
-}
-
 /**
- * Submits an audio file for transcription using Assembly AI
+ * Transcribe an audio file using AssemblyAI via Supabase Edge Function
  */
 export const transcribeAudio = async (
-  audioBlob: Blob, 
-  onProgress?: (status: string) => void
-): Promise<string> => {
+  audioFile: Blob, 
+  onProgressUpdate?: (status: string) => void
+): Promise<string> {
   try {
-    onProgress?.('Converting audio to base64...');
+    onProgressUpdate?.('Converting audio to base64...');
     
-    // Convert blob to base64
-    const base64Audio = await blobToBase64(audioBlob);
+    // Convert the audio blob to base64
+    const base64Audio = await blobToBase64(audioFile);
     
-    onProgress?.('Sending audio for transcription...');
+    onProgressUpdate?.('Uploading audio to AssemblyAI...');
     
-    // Submit the transcription job
-    const { data, error } = await supabase.functions.invoke('assembly-transcribe', {
-      body: { audioData: base64Audio }
+    // Submit the audio for transcription
+    const { data: submitData, error: submitError } = await supabase.functions.invoke('assembly-transcribe', {
+      body: { audio: base64Audio }
     });
 
-    if (error) {
-      console.error('Assembly AI transcription error:', error);
-      toast({
-        title: "Transcription Error",
-        description: error.message || "Failed to start transcription",
-        variant: "destructive"
-      });
-      throw error;
+    if (submitError) {
+      console.error('Error submitting audio for transcription:', submitError);
+      throw new Error(`Transcription submission failed: ${submitError.message}`);
     }
 
-    const { transcriptId } = data;
-    
-    if (!transcriptId) {
-      throw new Error('No transcript ID returned');
+    if (!submitData || !submitData.transcriptId) {
+      throw new Error('No transcript ID returned from submission');
     }
+
+    const transcriptId = submitData.transcriptId;
+    onProgressUpdate?.(`Transcription started with ID: ${transcriptId}`);
     
-    onProgress?.('Transcription job submitted, waiting for results...');
-    
-    // Poll for the result
-    const result = await pollTranscriptionResult(transcriptId, onProgress);
-    
-    return result.text;
+    // Poll for the transcription result
+    return await pollForTranscriptResult(transcriptId, onProgressUpdate);
   } catch (error) {
     console.error('Error transcribing audio:', error);
-    toast({
-      title: "Transcription Failed",
-      description: error.message || "Could not transcribe audio",
-      variant: "destructive"
-    });
-    return '';
+    throw error;
   }
 };
 
 /**
- * Polls the Assembly AI API for the transcription result
+ * Transcribe audio from a URL using AssemblyAI
  */
-export const pollTranscriptionResult = async (
-  transcriptId: string,
-  onProgress?: (status: string) => void,
-  maxRetries = 30,
-  delay = 2000
-): Promise<TranscriptionResult> => {
-  let retries = 0;
-  
-  while (retries < maxRetries) {
-    const { data, error } = await supabase.functions.invoke('assembly-transcript-status', {
-      body: { transcriptId }
+export const transcribeAudioUrl = async (
+  audioUrl: string,
+  onProgressUpdate?: (status: string) => void
+): Promise<string> {
+  try {
+    onProgressUpdate?.('Submitting URL for transcription...');
+    
+    // Submit the URL for transcription
+    const { data: submitData, error: submitError } = await supabase.functions.invoke('assembly-transcribe', {
+      body: { url: audioUrl }
     });
-    
-    if (error) {
-      console.error('Error checking transcription status:', error);
-      throw error;
+
+    if (submitError) {
+      console.error('Error submitting URL for transcription:', submitError);
+      throw new Error(`Transcription submission failed: ${submitError.message}`);
     }
+
+    if (!submitData || !submitData.transcriptId) {
+      throw new Error('No transcript ID returned from submission');
+    }
+
+    const transcriptId = submitData.transcriptId;
+    onProgressUpdate?.(`Transcription started with ID: ${transcriptId}`);
     
-    if (data.status === 'completed') {
-      onProgress?.('Transcription completed!');
-      return data;
-    } else if (data.status === 'error') {
-      onProgress?.('Transcription failed: ' + (data.error || 'Unknown error'));
-      throw new Error(data.error || 'Transcription failed');
-    } else {
-      onProgress?.(`Transcription in progress: ${data.status}`);
-      retries++;
-      // Wait before checking again
-      await new Promise(resolve => setTimeout(resolve, delay));
+    // Poll for the transcription result
+    return await pollForTranscriptResult(transcriptId, onProgressUpdate);
+  } catch (error) {
+    console.error('Error transcribing audio URL:', error);
+    throw error;
+  }
+};
+
+/**
+ * Poll for transcript status until it's completed
+ */
+async function pollForTranscriptResult(
+  transcriptId: string,
+  onProgressUpdate?: (status: string) => void,
+  maxAttempts = 30
+): Promise<string> {
+  let attempts = 0;
+  
+  while (attempts < maxAttempts) {
+    attempts++;
+    
+    try {
+      onProgressUpdate?.(`Checking transcription status (attempt ${attempts})...`);
+      
+      // Wait a bit before checking (longer for later attempts)
+      await new Promise(resolve => setTimeout(resolve, attempts < 5 ? 3000 : 5000));
+      
+      const { data: statusData, error: statusError } = await supabase.functions.invoke('assembly-transcript-status', {
+        body: { transcriptId }
+      });
+      
+      if (statusError) {
+        console.error('Error checking transcript status:', statusError);
+        continue;
+      }
+
+      if (!statusData) {
+        console.warn('No status data returned');
+        continue;
+      }
+      
+      // Handle different status cases
+      if (statusData.status === 'completed') {
+        onProgressUpdate?.('Transcription completed!');
+        return statusData.text || '';
+      } else if (statusData.status === 'error') {
+        throw new Error(`Transcription failed: ${statusData.error || 'Unknown error'}`);
+      } else {
+        // Still processing
+        onProgressUpdate?.(`Transcription in progress (status: ${statusData.status})...`);
+      }
+    } catch (error) {
+      console.error('Error polling for transcript:', error);
+      // Don't throw here, just try again
     }
   }
   
-  throw new Error('Transcription timed out');
-};
+  throw new Error('Transcription timed out after maximum attempts');
+}
 
 /**
  * Convert a Blob to a base64 string
  */
-export const blobToBase64 = (blob: Blob): Promise<string> => {
+function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -121,52 +144,4 @@ export const blobToBase64 = (blob: Blob): Promise<string> => {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
-};
-
-/**
- * Transcribe an audio file at a URL using Assembly AI
- */
-export const transcribeAudioUrl = async (
-  audioUrl: string,
-  onProgress?: (status: string) => void
-): Promise<string> => {
-  try {
-    onProgress?.('Submitting URL for transcription...');
-    
-    // Submit the transcription job
-    const { data, error } = await supabase.functions.invoke('assembly-transcribe', {
-      body: { audioUrl }
-    });
-
-    if (error) {
-      console.error('Assembly AI transcription error:', error);
-      toast({
-        title: "Transcription Error",
-        description: error.message || "Failed to start transcription",
-        variant: "destructive"
-      });
-      throw error;
-    }
-
-    const { transcriptId } = data;
-    
-    if (!transcriptId) {
-      throw new Error('No transcript ID returned');
-    }
-    
-    onProgress?.('Transcription job submitted, waiting for results...');
-    
-    // Poll for the result
-    const result = await pollTranscriptionResult(transcriptId, onProgress);
-    
-    return result.text;
-  } catch (error) {
-    console.error('Error transcribing audio URL:', error);
-    toast({
-      title: "Transcription Failed",
-      description: error.message || "Could not transcribe audio URL",
-      variant: "destructive"
-    });
-    return '';
-  }
-};
+}

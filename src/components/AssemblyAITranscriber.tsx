@@ -138,7 +138,7 @@ const AssemblyAITranscriber: React.FC = () => {
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Transcription error:', error);
       toast({
         title: "Transcription Failed",
@@ -181,7 +181,7 @@ const AssemblyAITranscriber: React.FC = () => {
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Transcription error:', error);
       toast({
         title: "Transcription Failed",
