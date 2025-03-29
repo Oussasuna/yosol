@@ -144,7 +144,8 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
     setCommand('Listening...');
     setProcessingStatus('idle');
     
-    if (serviceStatus === 'offline' || errorCount >= 3) {
+    const offlineStatus: ServiceStatus = 'offline';
+    if (serviceStatus === offlineStatus || errorCount >= 3) {
       console.log('Voice service is offline or too many errors, using simulation mode');
       simulateVoiceRecognition();
       return;
@@ -290,7 +291,8 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({ onCommand }) => {
   };
 
   const respondWithVoice = async (userCommand: string) => {
-    if (serviceStatus === 'offline') {
+    const offlineStatus: ServiceStatus = 'offline';
+    if (serviceStatus === offlineStatus) {
       console.log('Voice service is offline, skipping voice response');
       return;
     }
