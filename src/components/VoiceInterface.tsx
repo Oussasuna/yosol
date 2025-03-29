@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume, VolumeX, AlertTriangle } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
@@ -566,7 +567,7 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
           onCommand(randomCommand);
           setProcessingStatus('completed');
           
-          if (!isMuted && serviceStatus !== 'offline') {
+          if (!isMuted && serviceStatus !== OFFLINE_STATUS) {
             respondWithVoice(randomCommand);
           }
         } catch (error) {
