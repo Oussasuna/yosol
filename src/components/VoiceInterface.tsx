@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume, VolumeX, AlertTriangle } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
@@ -41,7 +40,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<number | null>(null);
   
-  // Define constants for service status to prevent TypeScript errors
   const OFFLINE_STATUS: ServiceStatus = 'offline';
   const ONLINE_STATUS: ServiceStatus = 'online';
   const PARTIAL_STATUS: ServiceStatus = 'partial';
@@ -316,7 +314,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
       
       const lowerCommand = userCommand.toLowerCase();
       
-      // More wallet-focused responses
       if (lowerCommand.includes('balance') || lowerCommand.includes('sol')) {
         responseText = `Your current balance is ${walletBalance} SOL, equivalent to approximately ${walletBalance * 100} dollars.`;
       } else if (lowerCommand.includes('wallet address') || lowerCommand.includes('my address')) {
@@ -446,7 +443,6 @@ const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
     setProcessingStatus('idle');
     
     timeoutRef.current = window.setTimeout(() => {
-      // More wallet-specific examples
       const exampleCommands = [
         'Show me my SOL balance',
         'Check the current Solana price',
