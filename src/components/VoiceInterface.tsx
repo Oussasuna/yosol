@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume, VolumeX, AlertTriangle } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
