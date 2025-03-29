@@ -37,7 +37,6 @@ refresh_token_reuse_interval = 10
 [realtime]
 enabled = true
 
-# Fix the functions section format
 [functions]
 enabled = true
 
