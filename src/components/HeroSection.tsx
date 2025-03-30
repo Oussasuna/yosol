@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Wallet, MessageCircle, TrendingUp, Smartphone, Download, Store } from 'lucide-react';
@@ -109,6 +110,56 @@ const HeroSection: React.FC = () => {
               </motion.div>
             </div>
             
+            {/* App Store and Play Store Coming Soon */}
+            <motion.div 
+              className="mt-8 relative z-20"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.7 }}
+            >
+              <div className="bg-black/30 backdrop-blur-md px-4 py-3 rounded-xl border border-white/10">
+                <p className="text-white text-sm mb-3 font-medium">Mobile Apps Coming Soon</p>
+                <div className="flex gap-4">
+                  <motion.a 
+                    href="#" 
+                    className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 transition-all duration-300 rounded-lg px-4 py-2 border border-white/10"
+                    whileHover={{ y: -5 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                      <path d="M12 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5.5"></path>
+                      <path d="M16 3v4"></path>
+                      <path d="M8 3v4"></path>
+                      <path d="M20.5 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z"></path>
+                      <path d="m18 16.5 2.5 2.5"></path>
+                      <path d="M4 11h16"></path>
+                    </svg>
+                    <div className="text-left">
+                      <div className="text-[10px] text-white/80">Download on the</div>
+                      <div className="text-sm font-semibold text-white">App Store</div>
+                    </div>
+                  </motion.a>
+                  <motion.a 
+                    href="#" 
+                    className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 transition-all duration-300 rounded-lg px-4 py-2 border border-white/10"
+                    whileHover={{ y: -5 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                      <path d="m3 16 5 3 3-5"></path>
+                      <path d="M13 8V6a3 3 0 0 0-6 0v2"></path>
+                      <path d="M8 8h8"></path>
+                      <path d="M19 8h-1"></path>
+                      <path d="M18 12V8h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h12"></path>
+                    </svg>
+                    <div className="text-left">
+                      <div className="text-[10px] text-white/80">GET IT ON</div>
+                      <div className="text-sm font-semibold text-white">Play Store</div>
+                    </div>
+                  </motion.a>
+                </div>
+              </div>
+            </motion.div>
             
           </motion.div>
           
