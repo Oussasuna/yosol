@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { MessageCircle, Shield, TrendingUp, Wallet, ArrowRight, Zap, Cloud, Mic } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import MobileAppBanner from '../components/MobileAppBanner';
 import {
   Carousel,
   CarouselContent,
@@ -173,7 +172,7 @@ const Index = () => {
         </motion.div>
       </section>
       
-      {/* CTA Section with 3D Elements and Mobile App Banner */}
+      {/* CTA Section with 3D Elements */}
       <section className="py-20 relative overflow-hidden">
         <motion.div style={{ opacity }} className="container px-4 md:px-6 relative z-10">
           <div className="glass-card p-8 md:p-12 relative overflow-hidden">
@@ -203,17 +202,12 @@ const Index = () => {
                 </Link>
               </div>
               
-              <div className="relative flex flex-col gap-6 items-center">
-                <div className="flex space-x-[2px] relative">
-                  <div className="voice-wave voice-wave-1 h-16"></div>
-                  <div className="voice-wave voice-wave-2 h-24"></div>
-                  <div className="voice-wave voice-wave-3 h-32"></div>
-                  <div className="voice-wave voice-wave-4 h-24"></div>
-                  <div className="voice-wave voice-wave-5 h-16"></div>
-                </div>
-                
-                {/* Mobile App Banner in CTA section */}
-                <MobileAppBanner />
+              <div className="flex space-x-[2px] relative">
+                <div className="voice-wave voice-wave-1 h-16"></div>
+                <div className="voice-wave voice-wave-2 h-24"></div>
+                <div className="voice-wave voice-wave-3 h-32"></div>
+                <div className="voice-wave voice-wave-4 h-24"></div>
+                <div className="voice-wave voice-wave-5 h-16"></div>
                 
                 {/* 3D floating elements */}
                 <motion.div 
