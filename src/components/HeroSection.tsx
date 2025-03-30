@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Wallet, MessageCircle, TrendingUp, Smartphone, Download } from 'lucide-react';
+import { ArrowRight, Wallet, MessageCircle, TrendingUp, Smartphone, Download, Store } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
@@ -26,18 +25,15 @@ const HeroSection: React.FC = () => {
 
   return (
     <section className="py-20 md:py-32 overflow-hidden relative">
-      {/* 3D Background Elements */}
       <motion.div 
         className="absolute top-0 left-0 w-full h-full z-0 opacity-70"
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.7 }}
         transition={{ duration: 1 }}
       >
-        {/* Grid lines for 3D effect */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_800px_at_100%_200px,rgba(153,69,255,0.1),transparent)]"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_600px_at_0%_300px,rgba(20,241,149,0.1),transparent)]"></div>
         
-        {/* Moving blobs */}
         <motion.div 
           className="absolute w-[500px] h-[500px] rounded-full bg-solana/5 blur-[100px]"
           animate={{ 
@@ -103,16 +99,15 @@ const HeroSection: React.FC = () => {
               </motion.div>
             </div>
             
-            {/* Enhanced App Store and Play Store buttons - Improved visibility */}
-            <div className="mt-8 pt-4 relative z-20">
-              <p className="text-sm text-white mb-4 font-medium">Download our mobile apps:</p>
+            <div className="mt-12 pt-4 relative z-30 bg-black/30 p-6 rounded-xl backdrop-blur-sm border border-white/10 shadow-xl">
+              <h3 className="text-xl font-semibold text-white mb-3">Coming Soon to Mobile</h3>
+              <p className="text-white/90 mb-6">Get yosol on your device when we launch:</p>
               <div className="flex flex-wrap gap-4">
                 <motion.div
-                  className="glass-card px-5 py-3 flex items-center gap-3 cursor-pointer group relative overflow-hidden"
-                  whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.12)" }}
+                  className="glass-card px-5 py-3 flex items-center gap-3 cursor-pointer group relative overflow-hidden border border-white/20"
+                  whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.15)" }}
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
-                  {/* Apple icon */}
                   <div className="bg-gradient-to-br from-white to-white/80 rounded-xl p-2 shadow-lg">
                     <svg 
                       viewBox="0 0 24 24" 
@@ -123,14 +118,14 @@ const HeroSection: React.FC = () => {
                     </svg>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground group-hover:text-white transition-colors">Download on the</span>
-                    <span className="text-base font-semibold">App Store</span>
+                    <span className="text-xs text-white/70 group-hover:text-white transition-colors">Download on the</span>
+                    <span className="text-base font-semibold text-white">App Store</span>
                   </div>
                   <Badge variant="outline" className="absolute top-2 right-2 border border-solana/30 bg-solana/10 text-solana text-[10px] py-0 px-2">
                     Soon
                   </Badge>
                   <motion.div 
-                    className="absolute inset-0 bg-gradient-to-r from-solana/0 via-solana/5 to-wallet-accent/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    className="absolute inset-0 bg-gradient-to-r from-solana/0 via-solana/10 to-wallet-accent/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                     animate={{ 
                       x: ['-100%', '100%'],
                     }}
@@ -143,11 +138,10 @@ const HeroSection: React.FC = () => {
                 </motion.div>
                 
                 <motion.div
-                  className="glass-card px-5 py-3 flex items-center gap-3 cursor-pointer group relative overflow-hidden"
-                  whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.12)" }}
+                  className="glass-card px-5 py-3 flex items-center gap-3 cursor-pointer group relative overflow-hidden border border-white/20"
+                  whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.15)" }}
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
-                  {/* Play Store icon */}
                   <div className="bg-gradient-to-br from-wallet-accent to-wallet-accent/80 rounded-xl p-2 shadow-lg">
                     <svg 
                       viewBox="0 0 24 24" 
@@ -158,14 +152,14 @@ const HeroSection: React.FC = () => {
                     </svg>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground group-hover:text-white transition-colors">GET IT ON</span>
-                    <span className="text-base font-semibold">Play Store</span>
+                    <span className="text-xs text-white/70 group-hover:text-white transition-colors">GET IT ON</span>
+                    <span className="text-base font-semibold text-white">Play Store</span>
                   </div>
                   <Badge variant="outline" className="absolute top-2 right-2 border border-wallet-accent/30 bg-wallet-accent/10 text-wallet-accent text-[10px] py-0 px-2">
                     Soon
                   </Badge>
                   <motion.div 
-                    className="absolute inset-0 bg-gradient-to-r from-wallet-accent/0 via-wallet-accent/5 to-solana/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    className="absolute inset-0 bg-gradient-to-r from-wallet-accent/0 via-wallet-accent/10 to-solana/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                     animate={{ 
                       x: ['-100%', '100%'],
                     }}
@@ -199,7 +193,6 @@ const HeroSection: React.FC = () => {
                 whileHover={{ y: -5 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
-                {/* 3D floating elements */}
                 <motion.div 
                   className="absolute top-4 right-4 w-4 h-4 rounded-full bg-solana/40 backdrop-blur-sm z-10"
                   animate={{ 
