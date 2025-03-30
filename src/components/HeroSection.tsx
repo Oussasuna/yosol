@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Wallet, MessageCircle, TrendingUp, Smartphone, Download } from 'lucide-react';
@@ -102,9 +103,9 @@ const HeroSection: React.FC = () => {
               </motion.div>
             </div>
             
-            {/* Enhanced App Store and Play Store buttons */}
-            <div className="mt-8 pt-4">
-              <p className="text-sm text-muted-foreground mb-4 font-medium">Download our mobile apps:</p>
+            {/* Enhanced App Store and Play Store buttons - Improved visibility */}
+            <div className="mt-8 pt-4 relative z-20">
+              <p className="text-sm text-white mb-4 font-medium">Download our mobile apps:</p>
               <div className="flex flex-wrap gap-4">
                 <motion.div
                   className="glass-card px-5 py-3 flex items-center gap-3 cursor-pointer group relative overflow-hidden"
