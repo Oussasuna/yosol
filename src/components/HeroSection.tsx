@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Wallet, MessageCircle, TrendingUp, Smartphone, Download } from 'lucide-react';
@@ -147,7 +146,7 @@ const HeroSection: React.FC = () => {
                   whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.12)" }}
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
-                  {/* Google Play icon */}
+                  {/* Play Store icon */}
                   <div className="bg-gradient-to-br from-wallet-accent to-wallet-accent/80 rounded-xl p-2 shadow-lg">
                     <svg 
                       viewBox="0 0 24 24" 
@@ -159,7 +158,7 @@ const HeroSection: React.FC = () => {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-xs text-muted-foreground group-hover:text-white transition-colors">GET IT ON</span>
-                    <span className="text-base font-semibold">Google Play</span>
+                    <span className="text-base font-semibold">Play Store</span>
                   </div>
                   <Badge variant="outline" className="absolute top-2 right-2 border border-wallet-accent/30 bg-wallet-accent/10 text-wallet-accent text-[10px] py-0 px-2">
                     Soon
@@ -176,18 +175,6 @@ const HeroSection: React.FC = () => {
                       delay: 0.2
                     }}
                   />
-                </motion.div>
-                
-                {/* Download QR code teaser */}
-                <motion.div
-                  className="glass-card p-3 flex items-center cursor-pointer group relative overflow-hidden"
-                  whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.12)" }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Download className="h-5 w-5 text-white/70 group-hover:text-white transition-colors" />
-                    <span className="text-sm font-medium">Get notified on release</span>
-                  </div>
                 </motion.div>
               </div>
             </div>
