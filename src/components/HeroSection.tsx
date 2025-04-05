@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Wallet, MessageCircle, TrendingUp, Smartphone, Download } from 'lucide-react';
+import { ArrowRight, Wallet, MessageCircle, TrendingUp, Smartphone, Download, Store } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +29,6 @@ const HeroSection: React.FC = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
   return <section className="py-20 md:py-32 overflow-hidden relative">
-      {/* 3D Background Elements */}
       <motion.div className="absolute top-0 left-0 w-full h-full z-0 opacity-70" initial={{
       opacity: 0
     }} animate={{
@@ -36,11 +36,9 @@ const HeroSection: React.FC = () => {
     }} transition={{
       duration: 1
     }}>
-        {/* Grid lines for 3D effect */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_800px_at_100%_200px,rgba(153,69,255,0.1),transparent)]"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_600px_at_0%_300px,rgba(20,241,149,0.1),transparent)]"></div>
         
-        {/* Moving blobs */}
         <motion.div className="absolute w-[500px] h-[500px] rounded-full bg-solana/5 blur-[100px]" animate={{
         x: [50, -50, 50],
         y: [20, -20, 20]
@@ -112,75 +110,57 @@ const HeroSection: React.FC = () => {
               </motion.div>
             </div>
             
-            {/* Enhanced App Store and Play Store buttons */}
-            <div className="mt-8 pt-4">
-              <p className="text-sm text-muted-foreground mb-4 font-medium">Download our mobile apps:</p>
-              <div className="flex flex-wrap gap-4">
-                <motion.div className="glass-card px-5 py-3 flex items-center gap-3 cursor-pointer group relative overflow-hidden" whileHover={{
-                y: -5,
-                backgroundColor: "rgba(255,255,255,0.12)"
-              }} transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 10
-              }}>
-                  {/* Apple icon */}
-                  <div className="bg-gradient-to-br from-white to-white/80 rounded-xl p-2 shadow-lg">
-                    <svg viewBox="0 0 24 24" className="h-6 w-6 text-black fill-current" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.87 1.17-.28 2.26-.93 3.46-.85 1.31.1 2.22.5 2.92 1.22-2.21 1.32-1.76 4.1.19 5.21-.54 1.67-1.28 3.32-2.65 5.52ZM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.32 2.32-1.89 4.27-3.74 4.25Z" />
+            {/* App Store and Play Store Coming Soon */}
+            <motion.div 
+              className="mt-8 relative z-20"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.7 }}
+            >
+              <div className="bg-black/30 backdrop-blur-md px-4 py-3 rounded-xl border border-white/10">
+                <p className="text-white text-sm mb-3 font-medium">Mobile Apps Coming Soon</p>
+                <div className="flex gap-4">
+                  <motion.a 
+                    href="#" 
+                    className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 transition-all duration-300 rounded-lg px-4 py-2 border border-white/10"
+                    whileHover={{ y: -5 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                      <path d="M12 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5.5"></path>
+                      <path d="M16 3v4"></path>
+                      <path d="M8 3v4"></path>
+                      <path d="M20.5 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z"></path>
+                      <path d="m18 16.5 2.5 2.5"></path>
+                      <path d="M4 11h16"></path>
                     </svg>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground group-hover:text-white transition-colors">Download on the</span>
-                    <span className="text-base font-semibold">App Store</span>
-                  </div>
-                  <Badge variant="outline" className="absolute top-2 right-2 border border-solana/30 bg-solana/10 text-solana text-[10px] py-0 px-2">
-                    Soon
-                  </Badge>
-                  <motion.div className="absolute inset-0 bg-gradient-to-r from-solana/0 via-solana/5 to-wallet-accent/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" animate={{
-                  x: ['-100%', '100%']
-                }} transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "linear"
-                }} />
-                </motion.div>
-                
-                <motion.div className="glass-card px-5 py-3 flex items-center gap-3 cursor-pointer group relative overflow-hidden" whileHover={{
-                y: -5,
-                backgroundColor: "rgba(255,255,255,0.12)"
-              }} transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 10
-              }}>
-                  {/* Google Play icon */}
-                  <div className="bg-gradient-to-br from-wallet-accent to-wallet-accent/80 rounded-xl p-2 shadow-lg">
-                    <svg viewBox="0 0 24 24" className="h-6 w-6 text-black fill-current" xmlns="http://www.w3.org/2000/svg">
-                      <path d="m12.954 11.616 2.957-2.957L6.36 3.17c-.633-.342-1.226-.39-1.746-.016l8.34 8.462zm3.94 3.939 1.718-1.718c.322-.322.485-.708.486-1.094 0-.387-.164-.773-.485-1.094l-1.333-1.333-3.083 3.082 2.697 2.157zM3.696 13.96l8.138 8.138c.344.343.808.533 1.306.533.27 0 .552-.067.83-.204.781-.374 1.324-1.293 1.324-2.372V11.96l-11.598 2z" />
+                    <div className="text-left">
+                      <div className="text-[10px] text-white/80">Download on the</div>
+                      <div className="text-sm font-semibold text-white">App Store</div>
+                    </div>
+                  </motion.a>
+                  <motion.a 
+                    href="#" 
+                    className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 transition-all duration-300 rounded-lg px-4 py-2 border border-white/10"
+                    whileHover={{ y: -5 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                      <path d="m3 16 5 3 3-5"></path>
+                      <path d="M13 8V6a3 3 0 0 0-6 0v2"></path>
+                      <path d="M8 8h8"></path>
+                      <path d="M19 8h-1"></path>
+                      <path d="M18 12V8h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h12"></path>
                     </svg>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground group-hover:text-white transition-colors">GET IT ON</span>
-                    <span className="text-base font-semibold">Google Play</span>
-                  </div>
-                  <Badge variant="outline" className="absolute top-2 right-2 border border-wallet-accent/30 bg-wallet-accent/10 text-wallet-accent text-[10px] py-0 px-2">
-                    Soon
-                  </Badge>
-                  <motion.div className="absolute inset-0 bg-gradient-to-r from-wallet-accent/0 via-wallet-accent/5 to-solana/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" animate={{
-                  x: ['-100%', '100%']
-                }} transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "linear",
-                  delay: 0.2
-                }} />
-                </motion.div>
-                
-                {/* Download QR code teaser */}
-                
+                    <div className="text-left">
+                      <div className="text-[10px] text-white/80">GET IT ON</div>
+                      <div className="text-sm font-semibold text-white">Play Store</div>
+                    </div>
+                  </motion.a>
+                </div>
               </div>
-            </div>
+            </motion.div>
+            
           </motion.div>
           
           <motion.div className="relative" initial={{
@@ -206,7 +186,6 @@ const HeroSection: React.FC = () => {
               stiffness: 400,
               damping: 10
             }}>
-                {/* 3D floating elements */}
                 <motion.div className="absolute top-4 right-4 w-4 h-4 rounded-full bg-solana/40 backdrop-blur-sm z-10" animate={{
                 y: [0, -10, 0],
                 opacity: [0.4, 0.8, 0.4]
