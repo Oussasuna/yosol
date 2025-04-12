@@ -18,14 +18,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      // Add buffer polyfill
-      buffer: 'buffer/'
     },
-  },
-  define: {
-    // Fix "Buffer is not defined" error
-    'process.env': {},
-    'global': {},
   },
   build: {
     rollupOptions: {
@@ -38,6 +31,7 @@ export default defineConfig(({ mode }) => ({
         'crypto',
         'events',
         'stream',
+        'buffer',
         'http'
       ],
     },
