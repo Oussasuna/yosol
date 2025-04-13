@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Wallet, MessageCircle, TrendingUp, Apple, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Badge } from '@/components/ui/badge';
+import StoreBadges from './StoreBadges';
+
 const HeroSection: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [mousePosition, setMousePosition] = useState({
@@ -27,8 +28,8 @@ const HeroSection: React.FC = () => {
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
+
   return <section className="py-20 md:py-32 overflow-hidden relative">
-      {/* 3D Background Elements */}
       <motion.div className="absolute top-0 left-0 w-full h-full z-0 opacity-70" initial={{
       opacity: 0
     }} animate={{
@@ -36,11 +37,9 @@ const HeroSection: React.FC = () => {
     }} transition={{
       duration: 1
     }}>
-        {/* Grid lines for 3D effect */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_800px_at_100%_200px,rgba(153,69,255,0.1),transparent)]"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_600px_at_0%_300px,rgba(20,241,149,0.1),transparent)]"></div>
         
-        {/* Moving blobs */}
         <motion.div className="absolute w-[500px] h-[500px] rounded-full bg-solana/5 blur-[100px]" animate={{
         x: [50, -50, 50],
         y: [20, -20, 20]
@@ -112,7 +111,7 @@ const HeroSection: React.FC = () => {
               </motion.div>
             </div>
             
-            {/* App Store Badges */}
+            <StoreBadges />
             
           </motion.div>
           
@@ -139,7 +138,6 @@ const HeroSection: React.FC = () => {
               stiffness: 400,
               damping: 10
             }}>
-                {/* 3D floating elements */}
                 <motion.div className="absolute top-4 right-4 w-4 h-4 rounded-full bg-solana/40 backdrop-blur-sm z-10" animate={{
                 y: [0, -10, 0],
                 opacity: [0.4, 0.8, 0.4]
