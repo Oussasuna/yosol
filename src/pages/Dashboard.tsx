@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import WalletOverview from '../components/WalletOverview';
@@ -49,7 +50,7 @@ const Dashboard = () => {
   return (
     <Layout>
       <div className="container px-4 py-8 mx-auto">
-        <h1 className="text-3xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-solana to-wallet-accent">
+        <h1 className="text-4xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-solana to-wallet-accent animate-pulse">
           Dashboard
         </h1>
         
