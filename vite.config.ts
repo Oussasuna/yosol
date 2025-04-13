@@ -18,28 +18,6 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "buffer": "buffer",
-    },
-  },
-  define: {
-    // Provide polyfills
-    'process.env': {},
-    'global': 'window',
-  },
-  build: {
-    rollupOptions: {
-      external: [
-        'rpc-websockets/dist/lib/client',
-        'fs',
-        'os',
-        'path',
-        'util',
-        'crypto',
-        'events',
-        'stream',
-        'buffer',
-        'http'
-      ],
     },
   },
 }));

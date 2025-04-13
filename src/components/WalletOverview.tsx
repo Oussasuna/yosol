@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { ArrowUp, ArrowDown, Copy, Check, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowUp, ArrowDown, Copy, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -18,9 +19,6 @@ interface WalletOverviewProps {
   balance?: number;
   onSend?: () => void;
   onReceive?: () => void;
-  handleVoiceCommand?: (command: string) => void;
-  onRefresh?: () => void;
-  isRefreshing?: boolean;
 }
 
 const WalletOverview: React.FC<WalletOverviewProps> = ({ 
@@ -29,10 +27,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   walletType: propWalletType,
   balance: propBalance,
   onSend,
-  onReceive,
-  handleVoiceCommand,
-  onRefresh,
-  isRefreshing: propIsRefreshing
+  onReceive
 }) => {
   const { 
     walletConnected: contextWalletConnected, 
@@ -44,10 +39,10 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     recentTransactions: contextTransactions,
     handleSend: contextHandleSend,
     handleReceive: contextHandleReceive,
-    isLoading: contextIsLoading,
-    refreshWalletData
+    isLoading: contextIsLoading
   } = usePhantomWallet();
   
+  // Use props if provided, otherwise fall back to context values
   const walletConnected = propWalletConnected !== undefined ? propWalletConnected : contextWalletConnected;
   const walletAddress = propWalletAddress !== null ? propWalletAddress : contextWalletAddress;
   const walletType = propWalletType !== null ? propWalletType : contextWalletType;
@@ -59,31 +54,15 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   
   const [isCopied, setIsCopied] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const shortAddress = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : '';
   const [isLoadingSend, setIsLoadingSend] = useState(false);
   const [isLoadingReceive, setIsLoadingReceive] = useState(false);
   const [activeTab, setActiveTab] = useState("balance");
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const shortAddress = walletAddress 
-    ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
-    : '';
-
-  const refreshingState = propIsRefreshing !== undefined ? propIsRefreshing : isRefreshing;
 
   useEffect(() => {
     setIsVisible(true);
     console.log("WalletOverview received address:", walletAddress);
-    
-    if (walletConnected && refreshWalletData) {
-      const refreshInterval = setInterval(() => {
-        refreshWalletData().catch(error => {
-          console.error('Error auto-refreshing wallet data:', error);
-        });
-      }, 15000);
-      
-      return () => clearInterval(refreshInterval);
-    }
-  }, [walletAddress, walletConnected, refreshWalletData]);
+  }, [walletAddress]);
 
   const handleCopyAddress = () => {
     if (walletAddress) {
@@ -110,10 +89,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       });
     }
     setTimeout(() => setIsLoadingSend(false), 1000);
-    
-    if (handleVoiceCommand) {
-      handleVoiceCommand("preparing to send SOL");
-    }
   };
 
   const handleReceive = () => {
@@ -129,44 +104,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       });
     }
     setTimeout(() => setIsLoadingReceive(false), 1000);
-    
-    if (handleVoiceCommand) {
-      handleVoiceCommand("ready to receive SOL");
-    }
   };
 
-  const handleManualRefresh = () => {
-    if (onRefresh) {
-      onRefresh();
-    } else if (refreshWalletData) {
-      setIsRefreshing(true);
-      refreshWalletData()
-        .then(() => {
-          toast({
-            title: "Wallet Refreshed",
-            description: "Your wallet data has been updated.",
-          });
-          if (handleVoiceCommand) {
-            handleVoiceCommand("wallet data refreshed");
-          }
-        })
-        .catch(error => {
-          console.error('Error refreshing wallet data:', error);
-          toast({
-            title: "Refresh Failed",
-            description: "Could not update wallet data. Please try again.",
-            variant: "destructive"
-          });
-        })
-        .finally(() => {
-          setIsRefreshing(false);
-        });
-    }
-  };
-
+  // Calculate total portfolio value
   const calculateTotalValue = () => {
-    const solPrice = 150;
-    const solValue = balance * solPrice; 
+    const solValue = balance * 100; // Assuming 1 SOL = $100 for simplicity
     const tokensValue = tokens.reduce((total, token) => total + token.usdValue, 0);
     return solValue + tokensValue;
   };
@@ -218,16 +160,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           <Button 
             variant="outline" 
             size="sm" 
-            className="gap-1 bg-white/5 hover:bg-white/10"
-            onClick={handleManualRefresh}
-            disabled={refreshingState}
-          >
-            <RefreshCw className={`h-4 w-4 ${refreshingState ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
             className="flex items-center gap-1 bg-white/5 hover:bg-white/10"
             onClick={handleReceive}
             disabled={isLoadingReceive}
@@ -261,7 +193,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           <h3 className="text-3xl font-bold">{balance.toFixed(4)} SOL</h3>
           <span className="ml-2 text-sm px-2 py-0.5 rounded-full bg-wallet-accent/20 text-wallet-accent">+12.5%</span>
         </div>
-        <p className="text-sm text-muted-foreground">≈ ${(balance * 150).toFixed(2)} USD</p>
+        <p className="text-sm text-muted-foreground">≈ ${(balance * 100).toFixed(2)} USD</p>
       </div>
 
       {isLoading ? (
@@ -283,7 +215,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
               <p className="text-2xl font-bold mb-1">${calculateTotalValue().toFixed(2)}</p>
               <div className="flex justify-between text-sm mt-3">
                 <span className="text-muted-foreground">SOL Balance</span>
-                <span>${(balance * 150).toFixed(2)}</span>
+                <span>${(balance * 100).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm mt-1">
                 <span className="text-muted-foreground">Token Value</span>

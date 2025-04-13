@@ -1,54 +1,102 @@
 
-// Define a class for recording audio
-export class RecordAudio {
-  private mediaRecorder: MediaRecorder | null = null;
-  private audioChunks: Blob[] = [];
+export class VoiceRecorder {
+  private stream: MediaStream | null = null;
+  private audioContext: AudioContext | null = null;
+  private processor: ScriptProcessorNode | null = null;
+  private source: MediaStreamAudioSourceNode | null = null;
+  private chunks: Float32Array[] = [];
+  private isRecording: boolean = false;
 
-  constructor() {
-    this.mediaRecorder = null;
-    this.audioChunks = [];
-  }
+  constructor(private onAudioData?: (audioData: Float32Array) => void) {}
 
-  // Start recording audio
-  async startRecording(): Promise<void> {
+  async start(): Promise<void> {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.mediaRecorder = new MediaRecorder(stream);
-      this.audioChunks = [];
-
-      this.mediaRecorder.addEventListener('dataavailable', (event) => {
-        if (event.data.size > 0) {
-          this.audioChunks.push(event.data);
+      if (this.isRecording) return;
+      
+      this.isRecording = true;
+      this.chunks = [];
+      
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          sampleRate: 24000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
         }
       });
-
-      this.mediaRecorder.start();
+      
+      this.audioContext = new AudioContext({
+        sampleRate: 24000,
+      });
+      
+      this.source = this.audioContext.createMediaStreamSource(this.stream);
+      this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
+      
+      this.processor.onaudioprocess = (e) => {
+        const inputData = e.inputBuffer.getChannelData(0);
+        const audioData = new Float32Array(inputData);
+        
+        // Store the chunk
+        this.chunks.push(audioData);
+        
+        // Call the callback if provided
+        if (this.onAudioData) {
+          this.onAudioData(audioData);
+        }
+      };
+      
+      this.source.connect(this.processor);
+      this.processor.connect(this.audioContext.destination);
+      
+      console.log('Voice recording started');
     } catch (error) {
-      console.error('Error starting recording:', error);
-      throw new Error('Failed to access microphone');
+      console.error('Error accessing microphone:', error);
+      this.isRecording = false;
+      throw error;
     }
   }
 
-  // Stop recording and return the recorded audio as a Blob
-  async stopRecording(): Promise<Blob> {
-    return new Promise((resolve, reject) => {
-      if (!this.mediaRecorder) {
-        reject(new Error('Recording not started'));
-        return;
-      }
+  stop(): Float32Array {
+    if (!this.isRecording) return new Float32Array();
+    
+    this.isRecording = false;
+    
+    if (this.source) {
+      this.source.disconnect();
+      this.source = null;
+    }
+    
+    if (this.processor) {
+      this.processor.disconnect();
+      this.processor = null;
+    }
+    
+    if (this.stream) {
+      this.stream.getTracks().forEach(track => track.stop());
+      this.stream = null;
+    }
+    
+    if (this.audioContext) {
+      this.audioContext.close();
+      this.audioContext = null;
+    }
+    
+    // Combine all chunks into a single Float32Array
+    const totalLength = this.chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+    const result = new Float32Array(totalLength);
+    let offset = 0;
+    
+    for (const chunk of this.chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    
+    console.log('Voice recording stopped, total samples:', totalLength);
+    return result;
+  }
 
-      this.mediaRecorder.addEventListener('stop', () => {
-        const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
-        
-        // Stop all tracks to release the microphone
-        if (this.mediaRecorder?.stream) {
-          this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
-        }
-        
-        resolve(audioBlob);
-      });
-
-      this.mediaRecorder.stop();
-    });
+  isActive(): boolean {
+    return this.isRecording;
   }
 }

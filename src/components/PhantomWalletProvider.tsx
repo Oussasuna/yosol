@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, createContext, useContext, ReactNode } from 'react';
 import Solflare from '@solflare-wallet/sdk';
 import { toast } from '@/components/ui/use-toast';
@@ -16,7 +17,6 @@ interface PhantomWalletContextType {
   handleReceive: () => void;
   isInitialized: boolean;
   isLoading: boolean;
-  refreshWalletData: () => Promise<void>;
 }
 
 export interface Token {
@@ -58,7 +58,6 @@ const PhantomWalletContext = createContext<PhantomWalletContextType>({
   handleReceive: () => {},
   isInitialized: false,
   isLoading: false,
-  refreshWalletData: async () => {},
 });
 
 export const usePhantomWallet = () => useContext(PhantomWalletContext);
@@ -74,81 +73,59 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [dataFetchError, setDataFetchError] = useState<string | null>(null);
 
   const fetchWalletData = async (address: string) => {
     setIsLoading(true);
-    setDataFetchError(null);
-    
     try {
-      console.log(`Fetching wallet data for address: ${address}`);
+      // Fetch SOL balance
+      const response = await fetch(`https://api.mainnet-beta.solana.com`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'getBalance',
+          params: [address],
+        }),
+      });
       
-      let balanceData = null;
-      let retryCount = 0;
-      const maxRetries = 3;
-      
-      while (retryCount < maxRetries && balanceData === null) {
-        try {
-          const response = await fetch(`https://api.mainnet-beta.solana.com`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              jsonrpc: '2.0',
-              id: 1,
-              method: 'getBalance',
-              params: [address],
-            }),
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Balance fetch failed with status: ${response.status}`);
-          }
-          
-          const data = await response.json();
-          if (data.error) {
-            throw new Error(`RPC error: ${data.error.message || JSON.stringify(data.error)}`);
-          }
-          
-          balanceData = data;
-        } catch (error) {
-          console.error(`Balance fetch attempt ${retryCount + 1} failed:`, error);
-          retryCount++;
-          if (retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-          }
-        }
-      }
-      
-      if (balanceData?.result?.value) {
+      const balanceData = await response.json();
+      if (balanceData.result?.value) {
+        // Convert from lamports to SOL (1 SOL = 10^9 lamports)
         const solBalance = balanceData.result.value / 1000000000;
-        console.log(`Wallet balance: ${solBalance} SOL`);
         setBalance(solBalance);
-      } else {
-        console.warn("Failed to fetch SOL balance after retries, using fallback or zero value");
-        setBalance(prev => prev || 0);
       }
 
-      await Promise.all([
-        fetchTokens(address),
-        fetchNFTs(address),
-        fetchTransactions(address)
-      ]);
+      // Fetch token balances
+      await fetchTokens(address);
       
-      console.log("Wallet data fetch completed successfully");
+      // Fetch NFTs
+      await fetchNFTs(address);
+      
+      // Fetch transactions
+      await fetchTransactions(address);
       
     } catch (error) {
-      console.error("Error in fetchWalletData:", error);
-      setDataFetchError("Failed to load wallet data. Please try again.");
-      
+      console.error("Error fetching wallet data:", error);
       toast({
         title: "Data Fetch Error",
-        description: "Could not load all wallet data. Some data may be simulated.",
+        description: "Could not load all wallet data. Using some simulated data.",
         variant: "destructive"
       });
       
-      if (balance === 0) setBalance(0.01);
+      // Provide fallback data if API calls fail
+      setBalance(prev => prev || 3.75);
+      if (tokens.length === 0) {
+        setTokens(getDefaultTokens());
+      }
+      if (nfts.length === 0) {
+        setNfts(getDefaultNFTs());
+      }
+      if (recentTransactions.length === 0) {
+        setRecentTransactions(getDefaultTransactions(address));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -156,326 +133,195 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
 
   const fetchTokens = async (address: string) => {
     try {
-      console.log("Fetching token data from Jupiter API");
-      
+      // Use Jupiter API to fetch tokens (more reliable than RPC for token data)
       const response = await fetch(`https://quote-api.jup.ag/v6/user-holdings?wallet=${address}`);
-      
-      if (!response.ok) {
-        throw new Error(`Token fetch failed with status: ${response.status}`);
-      }
-      
       const data = await response.json();
       
       if (data.tokens && Array.isArray(data.tokens)) {
         const mappedTokens: Token[] = data.tokens
-          .filter((token: any) => 
-            token && (parseFloat(token.usdValue) > 0.01 || parseFloat(token.amount) > 0)
-          )
+          .filter((token: any) => token.usdValue > 0.01) // Filter out dust
           .map((token: any) => ({
             symbol: token.symbol || "Unknown",
             name: token.name || token.symbol || "Unknown Token",
             amount: parseFloat(token.amount) || 0,
-            usdValue: parseFloat(token.usdValue) || 0,
+            usdValue: token.usdValue || 0,
             logoURI: token.logoURI || undefined
           }));
         
-        console.log(`Found ${mappedTokens.length} tokens for wallet`);
         setTokens(mappedTokens);
-        
-        if (mappedTokens.length === 0) {
-          console.log("No tokens found, using minimal example data");
-          setTokens([
-            {
-              symbol: "USDC",
-              name: "USD Coin",
-              amount: 0.001,
-              usdValue: 0.001,
-              logoURI: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png"
-            }
-          ]);
-        }
       } else {
-        throw new Error("Invalid token data format from API");
+        // Fallback if API doesn't return expected format
+        setTokens(getDefaultTokens());
       }
     } catch (error) {
       console.error("Error fetching tokens:", error);
-      setTokens([
-        {
-          symbol: "USDC",
-          name: "USD Coin",
-          amount: 0.001,
-          usdValue: 0.001,
-          logoURI: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png"
-        }
-      ]);
+      setTokens(getDefaultTokens());
     }
   };
 
   const fetchNFTs = async (address: string) => {
     try {
-      console.log("Fetching NFT data from Helius API");
-      
-      const response = await fetch(`https://mainnet.helius-rpc.com/?api-key=15319107-6a6d-427d-abd3-fb708c9ac916`, {
+      // Use Helius API for NFT data (would require an API key in production)
+      // For demo purposes, returning sample NFTs
+      setNfts(getDefaultNFTs());
+    } catch (error) {
+      console.error("Error fetching NFTs:", error);
+      setNfts(getDefaultNFTs());
+    }
+  };
+
+  const fetchTransactions = async (address: string) => {
+    try {
+      // Fetch recent transactions
+      const response = await fetch(`https://api.mainnet-beta.solana.com`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           jsonrpc: '2.0',
-          id: 'my-id',
-          method: 'getAssetsByOwner',
-          params: {
-            ownerAddress: address,
-            page: 1,
-            limit: 10,
-            displayOptions: {
-              showFungible: false,
-              showNativeBalance: false,
-            },
-          },
+          id: 1,
+          method: 'getSignaturesForAddress',
+          params: [address, { limit: 10 }],
         }),
       });
       
-      if (!response.ok) {
-        throw new Error(`NFT fetch failed with status: ${response.status}`);
-      }
+      const txData = await response.json();
       
-      const data = await response.json();
-      
-      if (data.result && data.result.items && Array.isArray(data.result.items)) {
-        const mappedNFTs: NFT[] = data.result.items
-          .filter((nft: any) => 
-            nft.content && 
-            nft.content.files && 
-            nft.content.files.length > 0 && 
-            nft.content.files[0].uri && 
-            nft.content.metadata && 
-            nft.content.metadata.name
-          )
-          .map((nft: any) => ({
-            name: nft.content.metadata.name || "Unnamed NFT",
-            image: nft.content.files[0].uri || "",
-            collection: nft.grouping && nft.grouping.length > 0 ? 
-              nft.grouping[0].group_value || "Unknown Collection" : "Unknown Collection"
-          }));
-        
-        console.log(`Found ${mappedNFTs.length} NFTs for wallet`);
-        setNfts(mappedNFTs);
-        
-        if (mappedNFTs.length === 0) {
-          console.log("No NFTs found, using example data");
-          setNfts([
-            {
-              name: "Example NFT",
-              image: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://bafybeiftgz2ibicqwdgxtb6uwgmklljdudckbn6ukpz27okhfnwza2uoei.ipfs.nftstorage.link/",
-              collection: "Example Collection"
-            }
-          ]);
-        }
-      } else {
-        throw new Error("Invalid NFT data format from API");
-      }
-    } catch (error) {
-      console.error("Error fetching NFTs:", error);
-      setNfts([
-        {
-          name: "Example NFT",
-          image: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://bafybeiftgz2ibicqwdgxtb6uwgmklljdudckbn6ukpz27okhfnwza2uoei.ipfs.nftstorage.link/",
-          collection: "Example Collection"
-        }
-      ]);
-    }
-  };
-
-  const fetchTransactions = async (address: string) => {
-    try {
-      console.log("Fetching transaction history");
-      
-      let txData = null;
-      let retryCount = 0;
-      const maxRetries = 3;
-      
-      while (retryCount < maxRetries && txData === null) {
-        try {
-          const response = await fetch(`https://api.mainnet-beta.solana.com`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              jsonrpc: '2.0',
-              id: 1,
-              method: 'getSignaturesForAddress',
-              params: [address, { limit: 10 }],
-            }),
-          });
+      if (txData.result && Array.isArray(txData.result)) {
+        // Process transaction data
+        const processedTxs: Transaction[] = txData.result.map((tx: any, index: number) => {
+          // In a real implementation, you would fetch each transaction to get details
+          // For demo purposes, we'll generate some sample data based on the signature
+          const signature = tx.signature;
+          const randomNum = parseInt(signature.slice(-6), 16) % 100;
+          const isSend = randomNum > 50;
           
-          if (!response.ok) {
-            throw new Error(`Transaction fetch failed with status: ${response.status}`);
-          }
-          
-          const data = await response.json();
-          if (data.error) {
-            throw new Error(`RPC error: ${data.error.message || JSON.stringify(data.error)}`);
-          }
-          
-          txData = data;
-        } catch (error) {
-          console.error(`Transaction fetch attempt ${retryCount + 1} failed:`, error);
-          retryCount++;
-          if (retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-          }
-        }
-      }
-      
-      if (txData?.result && Array.isArray(txData.result) && txData.result.length > 0) {
-        const processedTxs: Transaction[] = await Promise.all(
-          txData.result.map(async (tx: any, index: number) => {
-            try {
-              const txDetailsResponse = await fetch(`https://api.mainnet-beta.solana.com`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  jsonrpc: '2.0',
-                  id: 1,
-                  method: 'getTransaction',
-                  params: [
-                    tx.signature,
-                    { encoding: 'json', maxSupportedTransactionVersion: 0 }
-                  ],
-                }),
-              });
-              
-              if (!txDetailsResponse.ok) {
-                throw new Error(`Transaction details fetch failed with status: ${txDetailsResponse.status}`);
-              }
-              
-              const txDetails = await txDetailsResponse.json();
-              
-              if (txDetails.result) {
-                const transaction = txDetails.result;
-                if (!transaction.transaction || !transaction.transaction.message || !transaction.transaction.message.accountKeys) {
-                  throw new Error("Incomplete transaction data");
-                }
-                
-                const isSender = transaction.transaction.message.accountKeys[0] === address;
-                
-                let amount = 0;
-                if (transaction.meta && transaction.meta.postBalances && transaction.meta.preBalances) {
-                  const preBalance = isSender ? transaction.meta.preBalances[0] : 0;
-                  const postBalance = isSender ? transaction.meta.postBalances[0] : 0;
-                  amount = Math.abs(postBalance - preBalance) / 1000000000;
-                }
-                
-                const counterpartyAddress = isSender 
-                  ? transaction.transaction.message.accountKeys[1] 
-                  : transaction.transaction.message.accountKeys[0];
-                
-                const formattedAddress = counterpartyAddress 
-                  ? `${counterpartyAddress.slice(0, 6)}...${counterpartyAddress.slice(-4)}` 
-                  : "Unknown";
-                
-                return {
-                  id: tx.signature,
-                  type: isSender ? 'send' : 'receive',
-                  amount: amount.toFixed(5),
-                  ...(isSender 
-                    ? { to: formattedAddress } 
-                    : { from: formattedAddress }),
-                  date: new Date(tx.blockTime * 1000).toISOString(),
-                  status: tx.confirmationStatus === 'finalized' ? 'completed' : 'pending'
-                };
-              }
-            } catch (err) {
-              console.error("Error fetching transaction details:", err);
-            }
-            
-            const randomNum = parseInt(tx.signature.slice(-6), 16) % 100;
-            const isSend = randomNum > 50;
-            
-            return {
-              id: tx.signature,
-              type: isSend ? 'send' : 'receive',
-              amount: ((randomNum / 100) + 0.01).toFixed(5),
-              ...(isSend ? { to: `${tx.signature.slice(0, 6)}...${tx.signature.slice(-4)}` } : 
-                        { from: `${tx.signature.slice(0, 6)}...${tx.signature.slice(-4)}` }),
-              date: new Date(tx.blockTime * 1000).toISOString(),
-              status: 'completed'
-            };
-          })
-        );
+          return {
+            id: signature,
+            type: isSend ? 'send' : 'receive',
+            amount: ((randomNum / 10) + 0.1).toFixed(2),
+            ...(isSend ? { to: `${signature.slice(0, 6)}...${signature.slice(-4)}` } : 
+                      { from: `${signature.slice(0, 6)}...${signature.slice(-4)}` }),
+            date: new Date(tx.blockTime * 1000).toISOString(),
+            status: 'completed'
+          };
+        });
         
-        console.log(`Processed ${processedTxs.length} transactions`);
         setRecentTransactions(processedTxs);
       } else {
-        console.log("No transactions found or failed to fetch, using example data");
-        const currentDate = new Date();
-        const exampleTxs: Transaction[] = [];
-        
-        for (let i = 0; i < 3; i++) {
-          const date = new Date(currentDate);
-          date.setDate(date.getDate() - i);
-          
-          exampleTxs.push({
-            id: `example-tx-${i}`,
-            type: i % 2 === 0 ? 'receive' : 'send',
-            amount: ((i + 1) * 0.05).toFixed(5),
-            ...(i % 2 === 0 
-              ? { from: "FdGa...4aB2" }
-              : { to: "3xTy...9zQr" }),
-            date: date.toISOString(),
-            status: 'completed'
-          });
-        }
-        
-        setRecentTransactions(exampleTxs);
+        // Fallback if API doesn't return expected format
+        setRecentTransactions(getDefaultTransactions(address));
       }
     } catch (error) {
       console.error("Error fetching transactions:", error);
+      setRecentTransactions(getDefaultTransactions(address));
+    }
+  };
+
+  const getDefaultTokens = (): Token[] => {
+    return [
+      {
+        symbol: "USDC",
+        name: "USD Coin",
+        amount: 456.78,
+        usdValue: 456.78,
+        logoURI: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png"
+      },
+      {
+        symbol: "BONK",
+        name: "Bonk",
+        amount: 1250000,
+        usdValue: 125.5,
+        logoURI: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263/logo.png"
+      },
+      {
+        symbol: "RAY",
+        name: "Raydium",
+        amount: 24.5,
+        usdValue: 73.5,
+        logoURI: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R/logo.png"
+      },
+      {
+        symbol: "USDT",
+        name: "Tether",
+        amount: 120.25,
+        usdValue: 120.25,
+        logoURI: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.svg"
+      }
+    ];
+  };
+
+  const getDefaultNFTs = (): NFT[] => {
+    return [
+      {
+        name: "Solana Monkey Business #1234",
+        image: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://bafybeiftgz2ibicqwdgxtb6uwgmklljdudckbn6ukpz27okhfnwza2uoei.ipfs.nftstorage.link/",
+        collection: "Solana Monkey Business"
+      },
+      {
+        name: "DeGods #5678",
+        image: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://metadata.degods.com/g/4924.png",
+        collection: "DeGods"
+      },
+      {
+        name: "Okay Bears #9012",
+        image: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://bafybeidlntgd67mjs34lqpwklhkxu6ynr6vbrdaj5ycvzsyxj6an23ecqq.ipfs.nftstorage.link/",
+        collection: "Okay Bears"
+      },
+      {
+        name: "Claynosaurz #2468",
+        image: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://prod-image-cdn.tensor.trade/images/slug=claynosaurz/b1bca932-27d7-4835-9e88-c15d2e8145d2.jpeg",
+        collection: "Claynosaurz"
+      }
+    ];
+  };
+
+  const getDefaultTransactions = (address: string): Transaction[] => {
+    const transactions: Transaction[] = [];
+    const types: ('send' | 'receive' | 'swap')[] = ['send', 'receive', 'swap'];
+    const currentDate = new Date();
+    
+    for (let i = 0; i < 8; i++) {
+      const type = types[i % types.length];
+      const date = new Date(currentDate);
+      date.setDate(date.getDate() - i);
       
-      const currentDate = new Date();
-      const exampleTxs: Transaction[] = [];
+      const tx: Transaction = {
+        id: `tx-${i}-${Math.random().toString(36).substring(7)}`,
+        type,
+        amount: ((Math.random() * 20) + 0.1).toFixed(2),
+        date: date.toISOString(),
+        status: 'completed'
+      };
       
-      for (let i = 0; i < 3; i++) {
-        const date = new Date(currentDate);
-        date.setDate(date.getDate() - i);
-        
-        exampleTxs.push({
-          id: `example-tx-${i}`,
-          type: i % 2 === 0 ? 'receive' : 'send',
-          amount: ((i + 1) * 0.05).toFixed(5),
-          ...(i % 2 === 0 
-            ? { from: "FdGa...4aB2" }
-            : { to: "3xTy...9zQr" }),
-          date: date.toISOString(),
-          status: 'completed'
-        });
+      if (type === 'send') {
+        tx.to = `${address?.slice(0, 4) || 'Abc1'}...${address?.slice(-4) || 'wxyz'}`;
+      } else if (type === 'receive') {
+        tx.from = `${Math.random().toString(36).slice(2, 6)}...${Math.random().toString(36).slice(2, 6)}`;
+      } else {
+        tx.token = ['USDC', 'USDT', 'RAY', 'BONK'][Math.floor(Math.random() * 4)];
       }
       
-      setRecentTransactions(exampleTxs);
+      transactions.push(tx);
     }
+    
+    return transactions;
   };
 
   useEffect(() => {
     const initWallets = async () => {
       try {
-        console.log("Initializing wallet connections");
-        
+        // Initialize Solflare wallet
         const solflareWallet = new Solflare();
         
         solflareWallet.on('connect', () => {
           if (solflareWallet.publicKey) {
             const address = solflareWallet.publicKey.toString();
-            console.log(`Solflare wallet connected: ${address}`);
-            
             setWalletAddress(address);
             setWalletConnected(true);
             setWalletType("Solflare");
             fetchWalletData(address);
-            
             toast({
               title: "Wallet Connected",
               description: "Your Solflare wallet is connected",
@@ -485,8 +331,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         
         solflareWallet.on('disconnect', () => {
           if (walletType === "Solflare") {
-            console.log("Solflare wallet disconnected");
-            
             setWalletConnected(false);
             setWalletAddress(null);
             setWalletType(null);
@@ -494,7 +338,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
             setTokens([]);
             setNfts([]);
             setRecentTransactions([]);
-            
             toast({
               title: "Wallet Disconnected",
               description: "Your Solflare wallet has been disconnected",
@@ -505,21 +348,23 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         setSolflare(solflareWallet);
         setIsInitialized(true);
         
-        if (typeof window !== 'undefined' && window.solflare?.isConnected) {
-          if (solflareWallet.isConnected && solflareWallet.publicKey) {
-            const address = solflareWallet.publicKey.toString();
-            console.log(`Solflare wallet already connected: ${address}`);
-            
-            setWalletAddress(address);
-            setWalletConnected(true);
-            setWalletType("Solflare");
-            fetchWalletData(address);
-            
-            toast({
-              title: "Wallet Connected",
-              description: "Your Solflare wallet is already connected",
-            });
+        // Check if Solflare wallet is already connected
+        try {
+          if (typeof window !== 'undefined' && window.solflare?.isConnected) {
+            if (solflareWallet.isConnected && solflareWallet.publicKey) {
+              const address = solflareWallet.publicKey.toString();
+              setWalletAddress(address);
+              setWalletConnected(true);
+              setWalletType("Solflare");
+              fetchWalletData(address);
+              toast({
+                title: "Wallet Connected",
+                description: "Your Solflare wallet is already connected",
+              });
+            }
           }
+        } catch (error) {
+          console.log("No existing Solflare connection");
         }
       } catch (error) {
         console.error("Failed to initialize wallets:", error);
@@ -528,7 +373,7 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
           description: "Could not initialize wallets. Using simulation mode.",
           variant: "destructive"
         });
-        setIsInitialized(true);
+        setIsInitialized(true); // Still set initialized to prevent blocking UI
       }
     };
 
@@ -544,6 +389,7 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
           variant: "destructive"
         });
 
+        // Use simulation data in case the actual wallet is not available
         const simulatedAddress = "7YWm5WGRnXEEtST4Vr8WkR2WnPvMxW7Ka5YrGKjNFNwW";
         setWalletAddress(simulatedAddress);
         setWalletConnected(true);
@@ -553,13 +399,10 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
       }
 
       try {
-        console.log("Attempting to connect Solflare wallet");
+        // Connect to Solflare
         await solflare.connect();
         
-        toast({
-          title: "Wallet Connected",
-          description: "Your Solflare wallet is connected",
-        });
+        // The connection events will handle the state updates
       } catch (error) {
         console.error("Failed to connect Solflare wallet:", error);
         toast({
@@ -567,41 +410,27 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
           description: error instanceof Error ? error.message : "Failed to connect Solflare wallet. Please try again.",
           variant: "destructive"
         });
-        
-        setTimeout(() => {
-          const simulatedAddress = "7YWm5WGRnXEEtST4Vr8WkR2WnPvMxW7Ka5YrGKjNFNwW";
-          setWalletAddress(simulatedAddress);
-          setWalletConnected(true);
-          setWalletType("Solflare (Simulated)");
-          fetchWalletData(simulatedAddress);
-          
-          toast({
-            title: "Simulation Mode Enabled",
-            description: "Connected to a simulated wallet to demonstrate features.",
-          });
-        }, 1000);
       }
     } else {
-      const simulatedWalletAddresses = {
-        'Phantom': '6j1P2XMDvg6VrYZCXwwS6Z9YnAL3uA8zKHXwvuLkZAZd',
-        'Magic Eden': '8orM5QfgzVjxfhVWMwMmoHRYyHgNBGscTTRN12Xgx3Vt',
-        'OKX Wallet': 'CnRFxGuMKJA2Z9KxEcQrGZxJr17TkkoMrxEFKPp4V5oH',
-        'Backpack': '5iK2sfVZaFJHFEfT2MgQ9fzyHEuYPkCPi38bvSKmEuVC',
-        'Torus': 'B2K5YMaEa771qRBaUJyEMUx8YCFknQQdJsZLWpJYhCs4',
-        'MathWallet': 'HNrnRnRjMMCPEAboqKgxeH7YuQs7QPYzKJvuZX7jRzM9',
-        'Coinbase Wallet': '9ruhx35YVKdkD5TDvJGrXkMCpiNjL7kpTDWiJRz6hFsC'
+      // Handle other wallet types in a generic way
+      const generateRandomWalletAddress = () => {
+        const characters = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+        let result = '';
+        const length = 44;
+        
+        for (let i = 0; i < length; i++) {
+          result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        
+        return result;
       };
-      
-      const address = simulatedWalletAddresses[type as keyof typeof simulatedWalletAddresses] || 
-                      '7YWm5WGRnXEEtST4Vr8WkR2WnPvMxW7Ka5YrGKjNFNwW';
 
-      console.log(`Connecting to simulated ${type} wallet: ${address}`);
-      
       setTimeout(() => {
-        setWalletAddress(address);
+        const randomAddress = generateRandomWalletAddress();
+        setWalletAddress(randomAddress);
         setWalletConnected(true);
         setWalletType(type);
-        fetchWalletData(address);
+        fetchWalletData(randomAddress);
         
         toast({
           title: "Wallet Connected",
@@ -648,6 +477,7 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
     
     if (walletType === "Solflare" && solflare) {
       try {
+        // In a real implementation, you would create a transaction and use solflare.signAndSendTransaction()
         toast({
           title: "Send Request",
           description: "Please create a transaction to send through Solflare.",
@@ -679,6 +509,7 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
     }
     
     if (walletAddress) {
+      // Copy address to clipboard
       navigator.clipboard.writeText(walletAddress);
       toast({
         title: "Receive Address Ready",
@@ -690,16 +521,6 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         description: "Receive functionality is simulated in demo mode.",
       });
     }
-  };
-
-  const refreshWalletData = async () => {
-    if (walletAddress) {
-      console.log("Manually refreshing wallet data");
-      await fetchWalletData(walletAddress);
-      
-      return Promise.resolve();
-    }
-    return Promise.resolve();
   };
 
   return (
@@ -718,21 +539,9 @@ export const PhantomWalletProvider: React.FC<{ children: ReactNode }> = ({ child
         handleReceive,
         isInitialized,
         isLoading,
-        refreshWalletData,
       }}
     >
       {children}
-      {dataFetchError && (
-        <div className="fixed bottom-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50">
-          <p className="font-medium">Error: {dataFetchError}</p>
-          <button 
-            onClick={refreshWalletData}
-            className="mt-2 bg-white text-red-500 px-3 py-1 rounded text-sm"
-          >
-            Retry
-          </button>
-        </div>
-      )}
     </PhantomWalletContext.Provider>
   );
 };
