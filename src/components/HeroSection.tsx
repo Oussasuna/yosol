@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Wallet, MessageCircle, TrendingUp } from 'lucide-react';
+import { ArrowRight, Wallet, MessageCircle, TrendingUp, Apple, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
 
 const HeroSection: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -99,6 +100,41 @@ const HeroSection: React.FC = () => {
                     Learn More
                   </span>
                 </Button>
+              </motion.div>
+            </div>
+            
+            {/* App Store Badges */}
+            <div className="flex flex-col sm:flex-row items-center gap-4 mt-6">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+              >
+                <Badge variant="outline" className="px-4 py-2 flex items-center gap-2 bg-black/80 text-white border border-white/20">
+                  <Apple className="h-5 w-5" />
+                  <div>
+                    <div className="text-[10px] opacity-80">Coming soon to</div>
+                    <div className="text-sm font-semibold">App Store</div>
+                  </div>
+                </Badge>
+              </motion.div>
+              
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1 }}
+              >
+                <Badge variant="outline" className="px-4 py-2 flex items-center gap-2 bg-black/80 text-white border border-white/20">
+                  <ShoppingBag className="h-5 w-5" />
+                  <div>
+                    <div className="text-[10px] opacity-80">Coming soon to</div>
+                    <div className="text-sm font-semibold">Google Play</div>
+                  </div>
+                </Badge>
               </motion.div>
             </div>
           </motion.div>
