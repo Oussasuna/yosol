@@ -3,7 +3,6 @@ import Layout from '../components/Layout';
 import HeroSection from '../components/HeroSection';
 import FeatureCard from '../components/FeatureCard';
 import Roadmap from '../components/Roadmap';
-import StoreBadges from '../components/StoreBadges';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, Shield, TrendingUp, Wallet, ArrowRight, Zap, Cloud, Mic } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -54,9 +53,10 @@ const Index = () => {
     <Layout>
       <HeroSection />
       
+      {/* Removed the second StoreBadges component */}
+      
       {/* Mobile App Store Badges */}
       <div className="container px-4 md:px-6 relative z-10 -mt-8 mb-12">
-        <StoreBadges />
       </div>
       
       {/* Floating 3D Orbs */}
