@@ -13,8 +13,8 @@ const StoreBadges = () => {
         className="flex items-center"
       >
         <Badge 
-          variant="solid" 
-          className="px-4 py-2 flex items-center gap-2 bg-[#7E69AB] text-white border-none"
+          variant="purple" 
+          className="px-4 py-2 flex items-center gap-2 border-none"
         >
           <Apple className="h-5 w-5" />
           <div>
@@ -30,8 +30,8 @@ const StoreBadges = () => {
         className="flex items-center"
       >
         <Badge 
-          variant="solid" 
-          className="px-4 py-2 flex items-center gap-2 bg-[#0EA5E9] text-white border-none"
+          variant="green" 
+          className="px-4 py-2 flex items-center gap-2 border-none"
         >
           <ShoppingBag className="h-5 w-5" />
           <div>
