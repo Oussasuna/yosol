@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Wallet, MessageCircle, TrendingUp, Smartphone, Download, Apple, PlayIcon } from 'lucide-react';
+import { ArrowRight, Wallet, MessageCircle, TrendingUp, Smartphone, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
@@ -102,33 +103,32 @@ const HeroSection: React.FC = () => {
               </motion.div>
             </div>
             
-            {/* Enhanced App Store and Play Store buttons - Improved visibility */}
-            <div className="mt-8 pt-4 relative z-20">
-              <div className="flex items-center">
-                <p className="text-sm text-white mb-4 font-medium">Download our mobile apps:</p>
-                <Badge variant="outline" className="ml-2 mb-4 bg-solana/20 border border-solana text-white px-3 py-1">
-                  <span className="animate-pulse mr-1">●</span> Coming Soon
-                </Badge>
-              </div>
+            {/* Enhanced App Store and Play Store buttons */}
+            <div className="mt-8 pt-4">
+              <p className="text-sm text-muted-foreground mb-4 font-medium">Download our mobile apps:</p>
               <div className="flex flex-wrap gap-4">
                 <motion.div
-                  className="glass-card px-5 py-3 flex items-center gap-3 cursor-pointer group relative overflow-hidden opacity-80"
+                  className="glass-card px-5 py-3 flex items-center gap-3 cursor-pointer group relative overflow-hidden"
                   whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.12)" }}
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
                   {/* Apple icon */}
                   <div className="bg-gradient-to-br from-white to-white/80 rounded-xl p-2 shadow-lg">
-                    <Apple className="h-6 w-6 text-black" />
+                    <svg 
+                      viewBox="0 0 24 24" 
+                      className="h-6 w-6 text-black fill-current"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.87 1.17-.28 2.26-.93 3.46-.85 1.31.1 2.22.5 2.92 1.22-2.21 1.32-1.76 4.1.19 5.21-.54 1.67-1.28 3.32-2.65 5.52ZM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.32 2.32-1.89 4.27-3.74 4.25Z" />
+                    </svg>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-xs text-muted-foreground group-hover:text-white transition-colors">Download on the</span>
                     <span className="text-base font-semibold">App Store</span>
                   </div>
-                  <div className="absolute top-0 right-0 bottom-0 left-0 bg-black/20 backdrop-blur-sm flex items-center justify-center">
-                    <Badge className="bg-gradient-to-r from-solana to-wallet-accent text-white border-none text-sm px-3 py-1 shadow-lg">
-                      Coming Soon
-                    </Badge>
-                  </div>
+                  <Badge variant="outline" className="absolute top-2 right-2 border border-solana/30 bg-solana/10 text-solana text-[10px] py-0 px-2">
+                    Soon
+                  </Badge>
                   <motion.div 
                     className="absolute inset-0 bg-gradient-to-r from-solana/0 via-solana/5 to-wallet-accent/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                     animate={{ 
@@ -143,23 +143,27 @@ const HeroSection: React.FC = () => {
                 </motion.div>
                 
                 <motion.div
-                  className="glass-card px-5 py-3 flex items-center gap-3 cursor-pointer group relative overflow-hidden opacity-80"
+                  className="glass-card px-5 py-3 flex items-center gap-3 cursor-pointer group relative overflow-hidden"
                   whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.12)" }}
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
-                  {/* Play Store icon */}
+                  {/* Google Play icon */}
                   <div className="bg-gradient-to-br from-wallet-accent to-wallet-accent/80 rounded-xl p-2 shadow-lg">
-                    <PlayIcon className="h-6 w-6 text-black" />
+                    <svg 
+                      viewBox="0 0 24 24" 
+                      className="h-6 w-6 text-black fill-current"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="m12.954 11.616 2.957-2.957L6.36 3.17c-.633-.342-1.226-.39-1.746-.016l8.34 8.462zm3.94 3.939 1.718-1.718c.322-.322.485-.708.486-1.094 0-.387-.164-.773-.485-1.094l-1.333-1.333-3.083 3.082 2.697 2.157zM3.696 13.96l8.138 8.138c.344.343.808.533 1.306.533.27 0 .552-.067.83-.204.781-.374 1.324-1.293 1.324-2.372V11.96l-11.598 2z" />
+                    </svg>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-xs text-muted-foreground group-hover:text-white transition-colors">GET IT ON</span>
-                    <span className="text-base font-semibold">Play Store</span>
+                    <span className="text-base font-semibold">Google Play</span>
                   </div>
-                  <div className="absolute top-0 right-0 bottom-0 left-0 bg-black/20 backdrop-blur-sm flex items-center justify-center">
-                    <Badge className="bg-gradient-to-r from-solana to-wallet-accent text-white border-none text-sm px-3 py-1 shadow-lg">
-                      Coming Soon
-                    </Badge>
-                  </div>
+                  <Badge variant="outline" className="absolute top-2 right-2 border border-wallet-accent/30 bg-wallet-accent/10 text-wallet-accent text-[10px] py-0 px-2">
+                    Soon
+                  </Badge>
                   <motion.div 
                     className="absolute inset-0 bg-gradient-to-r from-wallet-accent/0 via-wallet-accent/5 to-solana/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                     animate={{ 
@@ -172,6 +176,18 @@ const HeroSection: React.FC = () => {
                       delay: 0.2
                     }}
                   />
+                </motion.div>
+                
+                {/* Download QR code teaser */}
+                <motion.div
+                  className="glass-card p-3 flex items-center cursor-pointer group relative overflow-hidden"
+                  whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.12)" }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Download className="h-5 w-5 text-white/70 group-hover:text-white transition-colors" />
+                    <span className="text-sm font-medium">Get notified on release</span>
+                  </div>
                 </motion.div>
               </div>
             </div>
