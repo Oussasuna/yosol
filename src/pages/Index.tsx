@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import Layout from '../components/Layout';
 import HeroSection from '../components/HeroSection';
 import FeatureCard from '../components/FeatureCard';
+import Partners from '../components/Partners';
 import Roadmap from '../components/Roadmap';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, Shield, TrendingUp, Wallet, ArrowRight, Zap, Cloud, Mic } from 'lucide-react';
@@ -53,8 +54,6 @@ const Index = () => {
     <Layout>
       <HeroSection />
       
-      {/* Removed the second StoreBadges component */}
-      
       {/* Mobile App Store Badges */}
       <div className="container px-4 md:px-6 relative z-10 -mt-8 mb-12">
       </div>
@@ -63,7 +62,7 @@ const Index = () => {
       <div className="absolute top-[30%] left-[10%] w-64 h-64 rounded-full bg-solana/5 blur-3xl animate-pulse-light"></div>
       <div className="absolute top-[40%] right-[15%] w-80 h-80 rounded-full bg-wallet-accent/5 blur-3xl animate-pulse-light" style={{ animationDelay: "1s" }}></div>
       
-      {/* Core Features Section - Simplified and focused on what's available now */}
+      {/* Core Features Section */}
       <section id="features" className="py-20 relative overflow-hidden">
         <motion.div 
           className="absolute -top-[300px] -right-[300px] w-[600px] h-[600px] rounded-full bg-solana/10 blur-3xl opacity-50 z-0"
@@ -121,6 +120,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+      
+      {/* Partners Section */}
+      <Partners />
       
       {/* Roadmap Section */}
       <Roadmap />
