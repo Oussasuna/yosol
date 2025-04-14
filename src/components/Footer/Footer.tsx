@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Send, Github, Twitter, MessageCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -45,14 +44,25 @@ const Footer = () => {
     <footer className="relative z-10 py-20 border-t border-white/5">
       <div className="container px-4 mx-auto">
         <div className="flex flex-col items-center text-center mb-16">
-          <motion.img 
-            src="/lovable-uploads/d07cc954-9c88-4ecd-8aaf-4bd39838b67f.png" 
-            alt="Planet" 
-            className="w-16 h-16 mb-8"
+          <motion.div 
+            className="relative w-16 h-16 mb-8 flex items-center justify-center"
             initial={{ rotate: 0 }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          />
+            animate={{ 
+              rotate: 360,
+              scale: [1, 1.1, 1],
+              filter: ["brightness(1)", "brightness(1.2)", "brightness(1)"]
+            }}
+            transition={{ 
+              duration: 20, 
+              repeat: Infinity, 
+              ease: "linear",
+              times: [0, 0.5, 1]
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-solana to-wallet-accent rounded-full opacity-20 blur-xl"></div>
+            <Send className="h-8 w-8 text-solana transform -rotate-45" />
+          </motion.div>
+          
           <h2 className="text-4xl font-bold mb-4">Stay Connected.</h2>
           <h3 className="text-4xl font-bold mb-8">Get Updates.</h3>
           
