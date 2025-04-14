@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { Apple, ShoppingBag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
+
 const StoreBadges = () => {
   return <div className="flex items-center justify-start gap-4 mt-6 py-[10px]">
       <motion.div whileHover={{
@@ -27,10 +29,12 @@ const StoreBadges = () => {
           <ShoppingBag className="h-5 w-5" />
           <div>
             <div className="text-[10px] opacity-80">Coming soon to</div>
-            <div className="text-sm font-semibold">Google Play</div>
+            <div className="text-sm font-semibold">Play Store</div>
           </div>
         </Badge>
       </motion.div>
     </div>;
 };
+
 export default StoreBadges;
+
