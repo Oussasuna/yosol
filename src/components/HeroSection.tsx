@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Wallet, MessageCircle, TrendingUp, Apple } from 'lucide-react';
+import { ArrowRight, Wallet, MessageCircle, TrendingUp, Apple, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Badge } from '@/components/ui/badge';
+import StoreBadges from './StoreBadges';
 
 const HeroSection: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -112,24 +111,8 @@ const HeroSection: React.FC = () => {
               </motion.div>
             </div>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
-              <motion.div 
-                whileHover={{ scale: 1.05 }} 
-                whileTap={{ scale: 0.95 }} 
-                className="flex items-center"
-              >
-                <Badge 
-                  variant="purple" 
-                  className="px-4 py-2 flex items-center gap-2 border-none"
-                >
-                  <Apple className="h-5 w-5" />
-                  <div>
-                    <div className="text-[10px] opacity-80">Coming soon to</div>
-                    <div className="text-sm font-semibold">App Store</div>
-                  </div>
-                </Badge>
-              </motion.div>
-            </div>
+            <StoreBadges />
+            
           </motion.div>
           
           <motion.div className="relative" initial={{
@@ -250,4 +233,3 @@ const HeroSection: React.FC = () => {
     </section>;
 };
 export default HeroSection;
-
