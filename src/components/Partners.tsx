@@ -6,29 +6,24 @@ import { Card } from "@/components/ui/card";
 const Partners = () => {
   const partners = [
     {
-      name: "Phantom",
+      name: "Dexscreener",
       logo: "/placeholder.svg",
-      description: "Leading Solana Wallet"
-    },
-    {
-      name: "Solflare",
-      logo: "/placeholder.svg",
-      description: "Advanced Solana Wallet"
-    },
-    {
-      name: "Magic Eden",
-      logo: "/placeholder.svg",
-      description: "NFT Marketplace"
+      description: "DEX Analytics Platform"
     },
     {
       name: "Jupiter",
-      logo: "/placeholder.svg",
+      logo: "/placeholder.svg", 
       description: "Liquidity Aggregator"
     },
     {
       name: "Orca",
       logo: "/placeholder.svg",
       description: "DEX Protocol"
+    },
+    {
+      name: "Solana",
+      logo: "/placeholder.svg",
+      description: "Blockchain Platform"
     }
   ];
 
@@ -75,7 +70,7 @@ const Partners = () => {
         </motion.div>
 
         <motion.div 
-          className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -88,7 +83,7 @@ const Partners = () => {
               whileHover={{ scale: 1.05 }}
               className="group"
             >
-              <Card className="h-full p-6 bg-background/50 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-300">
+              <Card className="h-full p-6 bg-[#0D0D0D] border border-[#1A1A1A] hover:border-[#2A2A2A] transition-all duration-300 rounded-xl">
                 <div className="flex flex-col items-center justify-center space-y-4">
                   <div className="relative w-20 h-20 flex items-center justify-center">
                     <img 
@@ -117,4 +112,3 @@ const Partners = () => {
 };
 
 export default Partners;
-
