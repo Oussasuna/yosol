@@ -9,6 +9,7 @@ import { MessageCircle, Shield, TrendingUp, Wallet, ArrowRight, Zap, Cloud, Mic 
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+
 const Index = () => {
   const {
     scrollY
@@ -42,6 +43,7 @@ const Index = () => {
     document.addEventListener('click', handleAnchorClick);
     return () => document.removeEventListener('click', handleAnchorClick);
   }, []);
+
   return <Layout>
       <HeroSection />
       
@@ -54,6 +56,12 @@ const Index = () => {
       <div className="absolute top-[40%] right-[15%] w-80 h-80 rounded-full bg-wallet-accent/5 blur-3xl animate-pulse-light" style={{
       animationDelay: "1s"
     }}></div>
+      
+      {/* Roadmap Section */}
+      <Roadmap />
+      
+      {/* Partners Section */}
+      <Partners />
       
       {/* Core Features Section */}
       <section id="features" className="py-20 relative overflow-hidden">
@@ -97,12 +105,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-      
-      {/* Partners Section */}
-      <Partners />
-      
-      {/* Roadmap Section */}
-      <Roadmap />
       
       {/* Testimonials Carousel Section */}
       <section className="py-20 relative overflow-hidden">
@@ -179,4 +181,5 @@ const Index = () => {
       </section>
     </Layout>;
 };
+
 export default Index;
