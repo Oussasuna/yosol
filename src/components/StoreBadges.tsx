@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 
 const StoreBadges = () => {
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
+    <div className="flex items-center justify-start gap-4 mt-6">
       <motion.div 
         whileHover={{ scale: 1.05 }} 
         whileTap={{ scale: 0.95 }} 
