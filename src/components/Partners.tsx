@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -83,7 +84,9 @@ const Partners = () => {
                     <img 
                       src={partner.logo} 
                       alt={partner.name} 
-                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${partner.name === 'Dexscreener' ? 'invert brightness-0 mix-blend-screen' : ''}`}
+                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 
+                        ${partner.name === 'Dexscreener' ? 'invert brightness-0 mix-blend-screen' : 
+                          partner.name === 'Jupiter' ? 'invert brightness-0 mix-blend-screen' : ''}`}
                       onError={e => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/placeholder.svg";
