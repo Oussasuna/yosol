@@ -10,7 +10,7 @@ const Partners = () => {
     link: "https://dexscreener.com"
   }, {
     name: "Jupiter",
-    logo: "/jupiter-logo.svg",
+    logo: "/lovable-uploads/55abe780-a166-4881-969c-0cb6190bf7e5.png",
     description: "Liquidity Aggregator",
     link: "https://jup.ag"
   }, {
@@ -24,6 +24,7 @@ const Partners = () => {
     description: "Blockchain Platform",
     link: "https://solana.com"
   }];
+
   const containerVariants = {
     hidden: {
       opacity: 0
@@ -48,6 +49,7 @@ const Partners = () => {
       }
     }
   };
+
   return <section className="py-24 relative overflow-hidden bg-transparent">
       <div className="container px-4 md:px-6 relative z-10">
         <motion.div className="text-center mb-16 space-y-4" initial={{
