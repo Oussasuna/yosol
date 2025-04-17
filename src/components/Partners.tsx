@@ -10,7 +10,7 @@ const Partners = () => {
     link: "https://dexscreener.com"
   }, {
     name: "Jupiter",
-    logo: "/lovable-uploads/55abe780-a166-4881-969c-0cb6190bf7e5.png",
+    logo: "/lovable-uploads/3eb3fd1f-7f2c-4ff7-9c38-d068d7814c0e.png",
     description: "Liquidity Aggregator",
     link: "https://jup.ag"
   }, {
@@ -83,7 +83,7 @@ const Partners = () => {
                     <img 
                       src={partner.logo} 
                       alt={partner.name} 
-                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${partner.name === 'Dexscreener' ? 'invert brightness-0 mix-blend-screen' : ''}`}
+                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${partner.name === 'Dexscreener' || partner.name === 'Jupiter' ? 'invert brightness-0 mix-blend-screen' : ''}`}
                       onError={e => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/placeholder.svg";
