@@ -10,7 +10,7 @@ const Partners = () => {
     link: "https://dexscreener.com"
   }, {
     name: "Jupiter",
-    logo: "/lovable-uploads/3eb3fd1f-7f2c-4ff7-9c38-d068d7814c0e.png",
+    logo: "/lovable-uploads/e76cacca-12c4-461e-801f-7763a29a8e53.png",
     description: "Liquidity Aggregator",
     link: "https://jup.ag"
   }, {
