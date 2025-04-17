@@ -81,7 +81,7 @@ const Partners = () => {
                     <img 
                       src={partner.logo} 
                       alt={partner.name} 
-                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${partner.name === 'Dexscreener' ? 'invert' : ''}`}
+                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${partner.name === 'Dexscreener' ? 'invert brightness-0 mix-blend-screen' : ''}`}
                       onError={e => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/placeholder.svg";
