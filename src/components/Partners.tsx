@@ -50,7 +50,8 @@ const Partners = () => {
     }
   };
 
-  return <section className="py-24 relative overflow-hidden bg-transparent">
+  return (
+    <section className="py-24 relative overflow-hidden bg-transparent">
       <div className="container px-4 md:px-6 relative z-10">
         <motion.div className="text-center mb-16 space-y-4" initial={{
         opacity: 0,
@@ -74,22 +75,23 @@ const Partners = () => {
         <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
         once: true
       }}>
-          {partners.map(partner => <motion.a key={partner.name} href={partner.link} target="_blank" rel="noopener noreferrer" variants={itemVariants} whileHover={{
-          scale: 1.02
-        }} className="group px-0">
+          {partners.map(partner => (
+            <motion.a key={partner.name} href={partner.link} target="_blank" rel="noopener noreferrer" variants={itemVariants} whileHover={{
+              scale: 1.02
+            }} className="group px-0">
               <Card className="h-full p-6 bg-transparent border-none hover:border-solana/50 transition-all duration-500 rounded-xl">
                 <div className="flex flex-col items-center justify-center space-y-4">
                   <div className="relative w-20 h-20 flex items-center justify-center">
                     <img 
                       src={partner.logo} 
                       alt={partner.name} 
-                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${partner.name === 'Dexscreener' || partner.name === 'Jupiter' ? 'invert brightness-0 mix-blend-screen' : ''}`}
+                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${partner.name === 'Jupiter' ? 'filter brightness-90 contrast-125' : ''}`}
                       onError={e => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/placeholder.svg";
                       }} 
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-solana/10 to-wallet-accent/10 rounded-full blur-xl opacity-0 group-hover:opacity-70 transition-all duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#6E59A5]/10 to-[#9b87f5]/10 rounded-full blur-xl opacity-0 group-hover:opacity-70 transition-all duration-500" />
                   </div>
                   <div className="text-center group-hover:transform group-hover:translate-y-[-2px] transition-all duration-500">
                     <h4 className="font-semibold text-lg mb-1 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
@@ -101,10 +103,12 @@ const Partners = () => {
                   </div>
                 </div>
               </Card>
-            </motion.a>)}
+            </motion.a>
+          ))}
         </motion.div>
       </div>
-    </section>;
+    </section>
+  );
 };
 
 export default Partners;
