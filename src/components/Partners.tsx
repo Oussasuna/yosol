@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 const Partners = () => {
   const partners = [{
     name: "Dexscreener",
-    logo: "/lovable-uploads/a18686fb-cb3d-4fe6-bfed-cee28f4c9349.png",
+    logo: "/lovable-uploads/d07cc954-9c88-4ecd-8aaf-4bd39838b67f.png",
     description: "DEX Analytics Platform",
     link: "https://dexscreener.com"
   }, {
