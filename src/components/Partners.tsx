@@ -55,10 +55,34 @@ const Partners = () => {
 
   return (
     <section className="py-24 relative overflow-hidden bg-gradient-to-b from-black via-[#0D0D0D] to-black">
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2a_1px,transparent_1px)] bg-[size:3rem_1px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#4f4f4f2a_1px,transparent_1px)] bg-[size:1px_3rem]" />
-      </div>
+      <motion.div className="absolute top-0 left-0 w-full h-full z-0 opacity-70" initial={{
+        opacity: 0
+      }} animate={{
+        opacity: 0.7
+      }} transition={{
+        duration: 1
+      }}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_800px_at_100%_200px,rgba(153,69,255,0.1),transparent)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_600px_at_0%_300px,rgba(20,241,149,0.1),transparent)]"></div>
+        
+        <motion.div className="absolute w-[500px] h-[500px] rounded-full bg-solana/5 blur-[100px]" animate={{
+          x: [50, -50, 50],
+          y: [20, -20, 20]
+        }} transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }} />
+        <motion.div className="absolute right-0 bottom-0 w-[400px] h-[400px] rounded-full bg-wallet-accent/5 blur-[100px]" animate={{
+          x: [-30, 30, -30],
+          y: [-30, 30, -30]
+        }} transition={{
+          duration: 15,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 2
+        }} />
+      </motion.div>
       
       <div className="container px-4 md:px-6 relative z-10">
         <motion.div 
@@ -126,3 +150,4 @@ const Partners = () => {
 };
 
 export default Partners;
+
