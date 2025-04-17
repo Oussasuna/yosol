@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -7,7 +8,7 @@ const Partners = () => {
   const partners = [{
     name: "Dexscreener",
     logo: "/dexscreener-logo.svg",
-    description: "DEX Analytics Platform",
+    description: "DEX Analytics Platform", 
     link: "https://dexscreener.com"
   }, {
     name: "Jupiter",
@@ -15,10 +16,10 @@ const Partners = () => {
     description: "Liquidity Aggregator",
     link: "https://jup.ag"
   }, {
-    name: "Orca",
-    logo: "/orca-logo.svg",
-    description: "DEX Protocol",
-    link: "https://www.orca.so"
+    name: "Raydium",
+    logo: "/raydium-logo.svg",
+    description: "AMM & Liquidity Provider",
+    link: "https://raydium.io"
   }, {
     name: "Solana",
     logo: "/solana-logo.svg",
