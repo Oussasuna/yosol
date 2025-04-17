@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 const Partners = () => {
   const partners = [{
     name: "Dexscreener",
-    logo: "/lovable-uploads/d07cc954-9c88-4ecd-8aaf-4bd39838b67f.png",
+    logo: "/lovable-uploads/031c68b5-e533-470e-b253-a4360d3d2426.png",
     description: "DEX Analytics Platform",
     link: "https://dexscreener.com"
   }, {
@@ -87,7 +87,7 @@ const Partners = () => {
                       alt={partner.name} 
                       className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${
                         partner.name === 'Dexscreener' 
-                          ? 'filter brightness-90 contrast-125 hue-rotate-15' 
+                          ? 'filter brightness-110 contrast-125 saturate-150' 
                           : partner.name === 'Jupiter' 
                           ? 'filter brightness-90 contrast-125 hue-rotate-30' 
                           : ''
@@ -99,7 +99,7 @@ const Partners = () => {
                     />
                     <div className={`absolute inset-0 rounded-full blur-xl opacity-0 group-hover:opacity-70 transition-all duration-500 ${
                       partner.name === 'Dexscreener' 
-                        ? 'bg-gradient-to-r from-[#6E59A5]/10 to-[#7E69AB]/10'
+                        ? 'bg-gradient-to-r from-[#6E59A5]/20 to-[#9b87f5]/20'
                         : partner.name === 'Jupiter' 
                         ? 'bg-gradient-to-r from-[#6E59A5]/10 to-[#9b87f5]/10'
                         : 'bg-gradient-to-r from-solana/10 to-wallet-accent/10'
