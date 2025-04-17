@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
-
 const Partners = () => {
   const partners = [{
     name: "Dexscreener",
@@ -78,10 +77,9 @@ const Partners = () => {
       }}>
           {partners.map(partner => <motion.a key={partner.name} href={partner.link} target="_blank" rel="noopener noreferrer" variants={itemVariants} whileHover={{
           scale: 1.02
-        }} className="group">
-              <Card className="h-full p-6 bg-black/60 backdrop-blur-sm border border-[#333] hover:border-solana/50 transition-all duration-500 rounded-xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
-                <div className="relative z-10 flex flex-col items-center justify-center space-y-4">
+        }} className="group px-0">
+              <Card className="h-full p-6 bg-black/40 backdrop-blur-sm border border-[#333] hover:border-solana/50 transition-all duration-500 rounded-xl">
+                <div className="flex flex-col items-center justify-center space-y-4">
                   <div className="relative w-20 h-20 flex items-center justify-center">
                     <img src={partner.logo} alt={partner.name} className="w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500" onError={e => {
                   const target = e.target as HTMLImageElement;
