@@ -85,13 +85,25 @@ const Partners = () => {
                     <img 
                       src={partner.logo} 
                       alt={partner.name} 
-                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${partner.name === 'Jupiter' ? 'filter brightness-90 contrast-125' : ''}`}
+                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${
+                        partner.name === 'Dexscreener' 
+                          ? 'filter brightness-90 contrast-125 hue-rotate-15' 
+                          : partner.name === 'Jupiter' 
+                          ? 'filter brightness-90 contrast-125 hue-rotate-30' 
+                          : ''
+                      }`}
                       onError={e => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/placeholder.svg";
                       }} 
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#6E59A5]/10 to-[#9b87f5]/10 rounded-full blur-xl opacity-0 group-hover:opacity-70 transition-all duration-500" />
+                    <div className={`absolute inset-0 rounded-full blur-xl opacity-0 group-hover:opacity-70 transition-all duration-500 ${
+                      partner.name === 'Dexscreener' 
+                        ? 'bg-gradient-to-r from-[#6E59A5]/10 to-[#7E69AB]/10'
+                        : partner.name === 'Jupiter' 
+                        ? 'bg-gradient-to-r from-[#6E59A5]/10 to-[#9b87f5]/10'
+                        : 'bg-gradient-to-r from-solana/10 to-wallet-accent/10'
+                    }`} />
                   </div>
                   <div className="text-center group-hover:transform group-hover:translate-y-[-2px] transition-all duration-500">
                     <h4 className="font-semibold text-lg mb-1 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
