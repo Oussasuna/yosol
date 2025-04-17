@@ -2,28 +2,30 @@ import React from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
+
 const Partners = () => {
   const partners = [{
     name: "Dexscreener",
-    logo: "/placeholder.svg",
+    logo: "/dexscreener-logo.svg",
     description: "DEX Analytics Platform",
     link: "https://dexscreener.com"
   }, {
     name: "Jupiter",
-    logo: "/placeholder.svg",
+    logo: "/jupiter-logo.svg",
     description: "Liquidity Aggregator",
     link: "https://jup.ag"
   }, {
     name: "Orca",
-    logo: "/placeholder.svg",
+    logo: "/orca-logo.svg",
     description: "DEX Protocol",
     link: "https://www.orca.so"
   }, {
     name: "Solana",
-    logo: "/placeholder.svg",
+    logo: "/solana-logo.svg",
     description: "Blockchain Platform",
     link: "https://solana.com"
   }];
+
   const containerVariants = {
     hidden: {
       opacity: 0
@@ -35,6 +37,7 @@ const Partners = () => {
       }
     }
   };
+
   const itemVariants = {
     hidden: {
       y: 20,
@@ -48,6 +51,7 @@ const Partners = () => {
       }
     }
   };
+
   return <section className="py-24 relative overflow-hidden bg-gradient-to-b from-black via-[#0D0D0D] to-black">
       <motion.div className="absolute top-0 left-0 w-full h-full z-0 opacity-70" initial={{
       opacity: 0
@@ -100,7 +104,15 @@ const Partners = () => {
               <Card className="h-full p-6 bg-black/40 backdrop-blur-sm border border-[#333] hover:border-solana/50 transition-all duration-500 rounded-xl">
                 <div className="flex flex-col items-center justify-center space-y-4">
                   <div className="relative w-20 h-20 flex items-center justify-center">
-                    <img src={partner.logo} alt={partner.name} className="w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500" />
+                    <img 
+                      src={partner.logo} 
+                      alt={partner.name} 
+                      className="w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder.svg";
+                      }}
+                    />
                     <div className="absolute inset-0 bg-gradient-to-r from-solana/10 to-wallet-accent/10 rounded-full blur-xl opacity-0 group-hover:opacity-70 transition-all duration-500" />
                   </div>
                   <div className="text-center group-hover:transform group-hover:translate-y-[-2px] transition-all duration-500">
@@ -122,4 +134,5 @@ const Partners = () => {
       </div>
     </section>;
 };
+
 export default Partners;
