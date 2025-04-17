@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -81,13 +82,13 @@ const Partners = () => {
             }} className="group px-0">
               <Card className="h-full p-6 bg-transparent border-none hover:border-solana/50 transition-all duration-500 rounded-xl">
                 <div className="flex flex-col items-center justify-center space-y-4">
-                  <div className="relative w-20 h-20 flex items-center justify-center">
+                  <div className="relative w-24 h-24 flex items-center justify-center">
                     <img 
                       src={partner.logo} 
                       alt={partner.name} 
-                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${
+                      className={`w-20 h-20 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${
                         partner.name === 'Dexscreener' 
-                          ? 'filter brightness-110 contrast-125 saturate-150' 
+                          ? 'filter brightness-110 contrast-125 saturate-150 rounded-full p-1' 
                           : partner.name === 'Jupiter' 
                           ? 'filter brightness-90 contrast-125 hue-rotate-30' 
                           : ''
