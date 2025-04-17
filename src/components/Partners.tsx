@@ -1,12 +1,11 @@
 import React from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
 
 const Partners = () => {
   const partners = [{
     name: "Dexscreener",
-    logo: "/dexscreener-logo.svg",
+    logo: "/lovable-uploads/07e23032-22e5-490a-a569-3cefde9f5d75.png",
     description: "DEX Analytics Platform",
     link: "https://dexscreener.com"
   }, {
@@ -79,10 +78,15 @@ const Partners = () => {
               <Card className="h-full p-6 bg-transparent border-none hover:border-solana/50 transition-all duration-500 rounded-xl">
                 <div className="flex flex-col items-center justify-center space-y-4">
                   <div className="relative w-20 h-20 flex items-center justify-center">
-                    <img src={partner.logo} alt={partner.name} className="w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500" onError={e => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/placeholder.svg";
-                }} />
+                    <img 
+                      src={partner.logo} 
+                      alt={partner.name} 
+                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${partner.name === 'Dexscreener' ? 'invert grayscale' : ''}`}
+                      onError={e => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder.svg";
+                      }} 
+                    />
                     <div className="absolute inset-0 bg-gradient-to-r from-solana/10 to-wallet-accent/10 rounded-full blur-xl opacity-0 group-hover:opacity-70 transition-all duration-500" />
                   </div>
                   <div className="text-center group-hover:transform group-hover:translate-y-[-2px] transition-all duration-500">
@@ -92,7 +96,6 @@ const Partners = () => {
                     <p className="text-sm text-muted-foreground mb-2">
                       {partner.description}
                     </p>
-                    
                   </div>
                 </div>
               </Card>
@@ -101,4 +104,5 @@ const Partners = () => {
       </div>
     </section>;
 };
+
 export default Partners;
