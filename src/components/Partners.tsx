@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 const Partners = () => {
   const partners = [{
     name: "Dexscreener",
-    logo: "/lovable-uploads/07e23032-22e5-490a-a569-3cefde9f5d75.png",
+    logo: "/lovable-uploads/a18686fb-cb3d-4fe6-bfed-cee28f4c9349.png",
     description: "DEX Analytics Platform",
     link: "https://dexscreener.com"
   }, {
@@ -81,7 +81,7 @@ const Partners = () => {
                     <img 
                       src={partner.logo} 
                       alt={partner.name} 
-                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${partner.name === 'Dexscreener' ? 'invert grayscale' : ''}`}
+                      className={`w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${partner.name === 'Dexscreener' ? 'invert' : ''}`}
                       onError={e => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/placeholder.svg";
