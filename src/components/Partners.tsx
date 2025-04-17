@@ -49,10 +49,7 @@ const Partners = () => {
       }
     }
   };
-  return <section className="py-24 relative overflow-hidden bg-gradient-to-b from-black via-[#0D0D0D] to-black">
-      <motion.div className="absolute -top-[300px] -right-[300px] w-[600px] h-[600px] rounded-full bg-solana/5 blur-3xl opacity-20 z-0" />
-      <motion.div className="absolute -bottom-[200px] -left-[200px] w-[400px] h-[400px] rounded-full bg-wallet-accent/5 blur-3xl opacity-20 z-0" />
-      
+  return <section className="py-24 relative overflow-hidden bg-transparent">
       <div className="container px-4 md:px-6 relative z-10">
         <motion.div className="text-center mb-16 space-y-4" initial={{
         opacity: 0,
@@ -79,7 +76,7 @@ const Partners = () => {
           {partners.map(partner => <motion.a key={partner.name} href={partner.link} target="_blank" rel="noopener noreferrer" variants={itemVariants} whileHover={{
           scale: 1.02
         }} className="group px-0">
-              <Card className="h-full p-6 bg-black/40 backdrop-blur-sm border-none hover:border-solana/50 transition-all duration-500 rounded-xl">
+              <Card className="h-full p-6 bg-transparent border-none hover:border-solana/50 transition-all duration-500 rounded-xl">
                 <div className="flex flex-col items-center justify-center space-y-4">
                   <div className="relative w-20 h-20 flex items-center justify-center">
                     <img src={partner.logo} alt={partner.name} className="w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500" onError={e => {
