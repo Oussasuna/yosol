@@ -74,21 +74,21 @@ const Partners = () => {
         </motion.div>
 
         <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
-        once: true
-      }}>
+          once: true
+        }}>
           {partners.map(partner => (
             <motion.a key={partner.name} href={partner.link} target="_blank" rel="noopener noreferrer" variants={itemVariants} whileHover={{
               scale: 1.02
             }} className="group px-0">
               <Card className="h-full p-6 bg-transparent border-none hover:border-solana/50 transition-all duration-500 rounded-xl">
                 <div className="flex flex-col items-center justify-center space-y-4">
-                  <div className="relative w-24 h-24 flex items-center justify-center">
+                  <div className="relative w-32 h-32 flex items-center justify-center">
                     <img 
                       src={partner.logo} 
                       alt={partner.name} 
-                      className={`w-20 h-20 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 ${
+                      className={`w-24 h-24 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 rounded-full p-3 ${
                         partner.name === 'Dexscreener' 
-                          ? 'filter brightness-110 contrast-125 saturate-150 rounded-full p-1' 
+                          ? 'filter brightness-110 contrast-125 saturate-150 bg-[#6E59A5]/10' 
                           : partner.name === 'Jupiter' 
                           ? 'filter brightness-90 contrast-125 hue-rotate-30' 
                           : ''
