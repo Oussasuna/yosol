@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 
@@ -79,7 +80,7 @@ const Roadmap = () => {
             phase="Phase 4" 
             title="Ecosystem Growth" 
             description="Launch marketing campaigns to onboard a wider user base. Continuous feature development based on user feedback. Strengthen partnerships within the Solana ecosystem to enhance platform utility." 
-            color="wallet-accent"
+            color="solana"
             delay={3}
           />
         </div>
