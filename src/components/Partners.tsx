@@ -16,7 +16,7 @@ const Partners = () => {
     link: "https://jup.ag"
   }, {
     name: "Raydium",
-    logo: "/raydium-logo.svg",
+    logo: "/lovable-uploads/f721e77d-1d9b-4ff6-84b1-81fa00a6b0cb.png",
     description: "AMM & Liquidity Provider",
     link: "https://raydium.io"
   }, {
@@ -90,7 +90,9 @@ const Partners = () => {
                         partner.name === 'Dexscreener' 
                           ? 'filter brightness-110 contrast-125 saturate-150 bg-[#6E59A5]/10' 
                           : partner.name === 'Jupiter' 
-                          ? 'filter brightness-90 contrast-125 hue-rotate-30' 
+                          ? 'filter brightness-90 contrast-125 hue-rotate-30'
+                          : partner.name === 'Raydium'
+                          ? 'filter brightness-105 contrast-110 bg-gradient-to-r from-[#2B6EFD]/10 to-[#9945FF]/10'
                           : ''
                       }`}
                       onError={e => {
@@ -103,6 +105,8 @@ const Partners = () => {
                         ? 'bg-gradient-to-r from-[#6E59A5]/20 to-[#9b87f5]/20'
                         : partner.name === 'Jupiter' 
                         ? 'bg-gradient-to-r from-[#6E59A5]/10 to-[#9b87f5]/10'
+                        : partner.name === 'Raydium'
+                        ? 'bg-gradient-to-r from-[#2B6EFD]/20 to-[#9945FF]/20'
                         : 'bg-gradient-to-r from-solana/10 to-wallet-accent/10'
                     }`} />
                   </div>
