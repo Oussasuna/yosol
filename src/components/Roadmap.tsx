@@ -59,7 +59,7 @@ const Roadmap = () => {
             phase="Phase 1" 
             title="MVP Launch" 
             description="Basic voice commands for seamless transactions and token swaps. Focus on providing a simple and intuitive user experience. Strong blockchain integration to ensure security and reliability." 
-            color="solana"
+            color="wallet-accent"
             delay={0}
           />
           <RoadmapCard 
@@ -90,3 +90,4 @@ const Roadmap = () => {
 };
 
 export default Roadmap;
+
