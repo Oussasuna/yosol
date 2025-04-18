@@ -15,7 +15,7 @@ const Partners = () => {
     link: "https://jup.ag"
   }, {
     name: "Raydium",
-    logo: "/lovable-uploads/40667a0a-7d0f-4d13-965c-88eb1244492e.png",
+    logo: "/lovable-uploads/867150ba-12a9-43ee-8d40-0d1611b9ce25.png",
     description: "AMM & Liquidity Provider",
     link: "https://raydium.io"
   }, {
