@@ -20,7 +20,7 @@ const Partners = () => {
     link: "https://raydium.io"
   }, {
     name: "Solana",
-    logo: "/solana-logo.svg",
+    logo: "/lovable-uploads/489e737b-a92e-43a5-ba7a-480c233c1a5a.png",
     description: "Blockchain Platform",
     link: "https://solana.com"
   }];
@@ -86,13 +86,9 @@ const Partners = () => {
                       src={partner.logo} 
                       alt={partner.name} 
                       className={`w-24 h-24 object-contain opacity-80 group-hover:opacity-100 transition-all duration-500 rounded-full p-3 ${
-                        partner.name === 'Dexscreener' 
-                          ? 'filter brightness-110 contrast-125 saturate-150 bg-[#6E59A5]/10' 
-                          : partner.name === 'Jupiter' 
-                          ? 'filter brightness-90 contrast-125 hue-rotate-30'
-                          : partner.name === 'Raydium'
-                          ? 'filter brightness-110 contrast-125 bg-transparent'
-                          : ''
+                        partner.name === 'Solana'
+                        ? 'bg-black'
+                        : ''
                       }`}
                       onError={e => {
                         const target = e.target as HTMLImageElement;
