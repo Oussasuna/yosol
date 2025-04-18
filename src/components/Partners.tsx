@@ -85,7 +85,7 @@ const Partners = () => {
                     <img 
                       src={partner.logo} 
                       alt={partner.name} 
-                      className={`${partner.name === 'Solana' ? 'w-24 h-24' : 'w-24 h-24'} object-contain opacity-80 group-hover:opacity-100 transition-all duration-500 rounded-none p-0`}
+                      className={`${partner.name === 'Solana' ? 'w-24 h-24' : 'w-24 h-24'} object-contain opacity-80 group-hover:opacity-100 transition-all duration-500 ${partner.name === 'Solana' ? 'rounded-none' : 'rounded-full'} p-0`}
                       onError={e => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/placeholder.svg";
