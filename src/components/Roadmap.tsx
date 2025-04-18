@@ -1,22 +1,19 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check } from 'lucide-react';
 
 const RoadmapCard = ({ 
   phase, 
   title, 
   description, 
   color = 'solana',
-  delay = 0,
-  isLive = false
+  delay = 0
 }: { 
   phase: string; 
   title: string; 
   description: string; 
   color?: 'solana' | 'wallet-accent';
   delay?: number;
-  isLive?: boolean;
 }) => {
   return (
     <motion.div 
@@ -26,20 +23,13 @@ const RoadmapCard = ({
       transition={{ duration: 0.5, delay: delay * 0.1 }}
       viewport={{ once: true }}
     >
-      {/* Glowing dot or check mark for live status */}
-      <div className={`absolute top-5 left-5 ${isLive ? 'w-auto h-auto p-1' : 'w-3 h-3 rounded-full'} ${isLive ? 'text-[#14F195]' : `bg-${color}`} ${!isLive && 'blur-[2px]'}`}>
-        {isLive && <Check size={16} />}
-      </div>
+      {/* Glowing dot in the corner */}
+      <div className={`absolute top-5 left-5 w-3 h-3 rounded-full bg-${color} blur-[2px]`} />
       
       {/* Subtle gradient overlay */}
       <div className={`absolute inset-0 opacity-5 bg-gradient-to-br from-${color} to-transparent rounded-xl pointer-events-none`} />
       
-      <h3 className="text-xl font-bold mb-2 mt-5">
-        {phase}
-        {isLive && (
-          <span className="ml-2 text-sm font-normal text-[#14F195]">(Live)</span>
-        )}
-      </h3>
+      <h3 className="text-xl font-bold mb-2 mt-5">{phase}</h3>
       <h4 className={`text-lg font-medium text-${color} mb-4`}>{title}</h4>
       <p className="text-sm text-muted-foreground">{description}</p>
     </motion.div>
@@ -73,7 +63,6 @@ const Roadmap = () => {
             description="Basic voice commands for seamless transactions and token swaps. Focus on providing a simple and intuitive user experience. Strong blockchain integration to ensure security and reliability." 
             color="solana"
             delay={0}
-            isLive={true}
           />
           <RoadmapCard 
             phase="Phase 2" 
