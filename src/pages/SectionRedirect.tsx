@@ -16,6 +16,7 @@ const SectionRedirect = () => {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else {
         // If the section doesn't exist, navigate to the home page
+        console.log(`Section ${section} not found, redirecting to home`);
         navigate('/');
       }
     }, 100);

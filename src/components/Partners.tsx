@@ -1,6 +1,10 @@
+
 import React from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 const Partners = () => {
   const partners = [{
@@ -23,6 +27,16 @@ const Partners = () => {
     logo: "/lovable-uploads/7f869378-c6d0-4932-af06-255a30e9f110.png",
     description: "Blockchain Platform",
     link: "https://solana.com"
+  }, {
+    name: "Orca",
+    logo: "/lovable-uploads/d07cc954-9c88-4ecd-8aaf-4bd39838b67f.png",
+    description: "Concentrated Liquidity DEX",
+    link: "https://www.orca.so"
+  }, {
+    name: "Phantom",
+    logo: "/lovable-uploads/55abe780-a166-4881-969c-0cb6190bf7e5.png",
+    description: "Non-Custodial Wallet",
+    link: "https://phantom.app"
   }];
 
   const containerVariants = {
@@ -52,7 +66,7 @@ const Partners = () => {
   };
 
   return (
-    <section className="py-24 relative overflow-hidden bg-transparent">
+    <section id="partners" className="py-24 relative overflow-hidden bg-transparent">
       <div className="container px-4 md:px-6 relative z-10">
         <motion.div className="text-center mb-16 space-y-4"
           initial={{ opacity: 0, y: 20 }}
@@ -143,6 +157,17 @@ const Partners = () => {
             </motion.a>
           ))}
         </motion.div>
+        
+        <div className="mt-12 text-center">
+          <Button 
+            className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90 transition-opacity duration-300 gap-2 group"
+            asChild
+          >
+            <a href="https://solana.com/ecosystem" target="_blank" rel="noopener noreferrer">
+              Explore Solana Ecosystem <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+            </a>
+          </Button>
+        </div>
       </div>
     </section>
   );

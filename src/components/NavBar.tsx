@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Wallet, ArrowRight, Menu, X } from 'lucide-react';
@@ -40,6 +39,13 @@ const NavBar: React.FC = () => {
         setTimeout(() => {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }, 100);
+      }
+    } else if (path === '/partners' && location.pathname === '/') {
+      // If we're already on home page and clicking partners, just scroll to partners section
+      e.preventDefault();
+      const partnersSection = document.getElementById('partners');
+      if (partnersSection) {
+        partnersSection.scrollIntoView({ behavior: 'smooth' });
       }
     }
     // All other links use their default behavior
@@ -105,7 +111,7 @@ const NavBar: React.FC = () => {
                 <Link 
                   to={item.path} 
                   className={`nav-link ${location.pathname === item.path ? 'text-foreground after:scale-x-100' : ''}`}
-                  onClick={(e) => item.path === '/' ? handleNavLinkClick('/', e) : undefined}
+                  onClick={(e) => handleNavLinkClick(item.path, e)}
                 >
                   {item.label}
                 </Link>
@@ -174,9 +180,7 @@ const NavBar: React.FC = () => {
                     className={`text-lg font-medium ${location.pathname === item.path ? 'text-solana' : 'text-white'}`}
                     onClick={(e) => {
                       setMobileMenuOpen(false);
-                      if (item.path === '/') {
-                        handleNavLinkClick('/', e);
-                      }
+                      handleNavLinkClick(item.path, e);
                     }}
                   >
                     {item.label}
