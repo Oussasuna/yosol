@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Github, Twitter, Linkedin } from 'lucide-react';
+import { Twitter, Linkedin } from 'lucide-react';
 
 interface TeamMember {
   name: string;
@@ -11,7 +10,6 @@ interface TeamMember {
   image?: string;
   initials: string;
   socialLinks?: {
-    github?: string;
     twitter?: string;
     linkedin?: string;
   };
@@ -24,7 +22,6 @@ const TeamSection = () => {
     bio: "Blockchain expert with 10+ years in fintech and AI innovation.",
     initials: "AJ",
     socialLinks: {
-      github: "https://github.com",
       twitter: "https://twitter.com",
       linkedin: "https://linkedin.com"
     }
@@ -34,7 +31,6 @@ const TeamSection = () => {
     bio: "Former Google AI engineer with expertise in voice recognition systems.",
     initials: "SC",
     socialLinks: {
-      github: "https://github.com",
       linkedin: "https://linkedin.com"
     }
   }, {
@@ -52,7 +48,6 @@ const TeamSection = () => {
     bio: "Solana ecosystem developer with multiple successful DeFi projects.",
     initials: "LR",
     socialLinks: {
-      github: "https://github.com",
       twitter: "https://twitter.com"
     }
   }];
@@ -85,7 +80,6 @@ const TeamSection = () => {
 
   return (
     <section id="team" className="py-20 relative overflow-hidden">
-      {/* Background elements */}
       <div className="absolute -top-40 -left-40 w-80 h-80 rounded-full bg-solana/10 blur-3xl opacity-30"></div>
       <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full bg-wallet-accent/10 blur-3xl opacity-30"></div>
       
@@ -122,7 +116,6 @@ const TeamSection = () => {
                 transition: { duration: 0.2 }
               }}
             >
-              {/* Hover effect */}
               <div className="absolute -inset-1 bg-gradient-to-r from-solana/20 to-wallet-accent/20 rounded-xl blur-xl opacity-0 group-hover:opacity-70 transition-opacity duration-500"></div>
               
               <div className="relative z-10 flex flex-col items-center text-center">
@@ -140,27 +133,19 @@ const TeamSection = () => {
                 <p className="text-sm text-solana mb-3">{member.role}</p>
                 <p className="text-muted-foreground text-sm mb-4">{member.bio}</p>
                 
-                {member.socialLinks && (
-                  <div className="flex space-x-3 mt-auto">
-                    {member.socialLinks.github && (
-                      <a href={member.socialLinks.github} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-solana transition-colors">
-                        <Github size={18} />
-                      </a>
-                    )}
-                    {member.socialLinks.twitter && (
-                      <a href={member.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-wallet-accent transition-colors">
-                        <Twitter size={18} />
-                      </a>
-                    )}
-                    {member.socialLinks.linkedin && (
-                      <a href={member.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-solana transition-colors">
-                        <Linkedin size={18} />
-                      </a>
-                    )}
-                  </div>
-                )}
+                <div className="flex space-x-3 mt-auto">
+                  {member.socialLinks?.twitter && (
+                    <a href={member.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-wallet-accent transition-colors">
+                      <Twitter size={18} />
+                    </a>
+                  )}
+                  {member.socialLinks?.linkedin && (
+                    <a href={member.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-solana transition-colors">
+                      <Linkedin size={18} />
+                    </a>
+                  )}
+                </div>
                 
-                {/* 3D floating element */}
                 <motion.div 
                   className="absolute -bottom-2 right-2 w-3 h-3 rounded-full bg-wallet-accent/30 backdrop-blur-sm opacity-0 group-hover:opacity-100"
                   animate={{ 
