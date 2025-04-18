@@ -91,7 +91,7 @@ const Partners = () => {
                           : partner.name === 'Jupiter' 
                           ? 'filter brightness-90 contrast-125 hue-rotate-30'
                           : partner.name === 'Raydium'
-                          ? 'filter brightness-110 contrast-125 bg-gradient-to-r from-[#2B6EFD]/20 to-[#9945FF]/20 shadow-lg'
+                          ? 'filter brightness-110 contrast-125 bg-transparent'
                           : ''
                       }`}
                       onError={e => {
