@@ -20,7 +20,7 @@ const Partners = () => {
     link: "https://raydium.io"
   }, {
     name: "Solana",
-    logo: "/lovable-uploads/60503163-6cd4-4d64-8431-08af0f060787.png",
+    logo: "/lovable-uploads/7f869378-c6d0-4932-af06-255a30e9f110.png",
     description: "Blockchain Platform",
     link: "https://solana.com"
   }];
@@ -85,21 +85,12 @@ const Partners = () => {
                     <img 
                       src={partner.logo} 
                       alt={partner.name} 
-                      className={`${partner.name === 'Solana' ? 'w-24 h-24' : 'w-24 h-24'} object-contain opacity-80 group-hover:opacity-100 transition-all duration-500 ${partner.name === 'Solana' ? 'rounded-none' : 'rounded-full'} p-0`}
+                      className="w-24 h-24 object-contain opacity-80 group-hover:opacity-100 transition-all duration-500 rounded-none p-0"
                       onError={e => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/placeholder.svg";
                       }} 
                     />
-                    {partner.name !== 'Solana' && (
-                      <div className={`absolute inset-0 rounded-full blur-xl opacity-0 group-hover:opacity-70 transition-all duration-500 ${
-                        partner.name === 'Dexscreener' 
-                          ? 'bg-gradient-to-r from-[#6E59A5]/20 to-[#9b87f5]/20'
-                          : partner.name === 'Jupiter' 
-                          ? 'bg-gradient-to-r from-[#6E59A5]/10 to-[#9b87f5]/10'
-                          : 'bg-gradient-to-r from-[#2B6EFD]/20 to-[#9945FF]/20'
-                      }`} />
-                    )}
                   </div>
                   <div className="text-center group-hover:transform group-hover:translate-y-[-2px] transition-all duration-500">
                     <h4 className="font-semibold text-lg mb-1 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
