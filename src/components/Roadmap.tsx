@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 
@@ -23,10 +22,8 @@ const RoadmapCard = ({
       transition={{ duration: 0.5, delay: delay * 0.1 }}
       viewport={{ once: true }}
     >
-      {/* Glowing dot in the corner */}
       <div className={`absolute top-5 left-5 w-3 h-3 rounded-full bg-${color} blur-[2px]`} />
       
-      {/* Subtle gradient overlay */}
       <div className={`absolute inset-0 opacity-5 bg-gradient-to-br from-${color} to-transparent rounded-xl pointer-events-none`} />
       
       <h3 className="text-xl font-bold mb-2 mt-5">{phase}</h3>
