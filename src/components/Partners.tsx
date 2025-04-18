@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -20,7 +21,7 @@ const Partners = () => {
     link: "https://raydium.io"
   }, {
     name: "Solana",
-    logo: "/lovable-uploads/489e737b-a92e-43a5-ba7a-480c233c1a5a.png",
+    logo: "/lovable-uploads/60503163-6cd4-4d64-8431-08af0f060787.png",
     description: "Blockchain Platform",
     link: "https://solana.com"
   }];
@@ -85,7 +86,7 @@ const Partners = () => {
                     <img 
                       src={partner.logo} 
                       alt={partner.name} 
-                      className={`${partner.name === 'Solana' ? 'w-20 h-20' : 'w-24 h-24'} object-contain opacity-80 group-hover:opacity-100 transition-all duration-500 rounded-full p-3`}
+                      className={`${partner.name === 'Solana' ? 'w-24 h-24' : 'w-24 h-24'} object-contain opacity-80 group-hover:opacity-100 transition-all duration-500 rounded-full p-3`}
                       onError={e => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/placeholder.svg";
@@ -120,3 +121,4 @@ const Partners = () => {
 };
 
 export default Partners;
+
