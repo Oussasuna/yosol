@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
-import { Send, Github, Twitter, MessageCircle } from 'lucide-react';
+import { Send, Twitter, MessageCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
+
 const Footer = () => {
   const [email, setEmail] = useState('');
   const handleSubmit = (e: React.FormEvent) => {
@@ -10,6 +12,7 @@ const Footer = () => {
     // Handle newsletter subscription
     setEmail('');
   };
+  
   const socialLinks = [{
     name: 'TELEGRAM',
     icon: <Send className="h-5 w-5" />,
@@ -25,12 +28,8 @@ const Footer = () => {
     icon: <MessageCircle className="h-5 w-5" />,
     description: 'Explore the community',
     href: '#'
-  }, {
-    name: 'GITHUB',
-    icon: <Github className="h-5 w-5" />,
-    description: 'Issues & Feature request',
-    href: '#'
   }];
+
   return <footer className="relative z-10 py-20 border-t border-white/5">
       <div className="container px-4 mx-auto">
         <div className="flex flex-col items-center text-center mb-16">
@@ -63,7 +62,7 @@ const Footer = () => {
           </form>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-16">
           {socialLinks.map(link => <motion.a key={link.name} href={link.href} className="p-6 bg-white/5 rounded-lg hover:bg-white/10 transition-colors" whileHover={{
           scale: 1.02
         }} whileTap={{
@@ -78,7 +77,6 @@ const Footer = () => {
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
-          
           
         </div>
       </div>
