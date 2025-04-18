@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -27,16 +26,6 @@ const Partners = () => {
     logo: "/lovable-uploads/7f869378-c6d0-4932-af06-255a30e9f110.png",
     description: "Blockchain Platform",
     link: "https://solana.com"
-  }, {
-    name: "Orca",
-    logo: "/lovable-uploads/d07cc954-9c88-4ecd-8aaf-4bd39838b67f.png",
-    description: "Concentrated Liquidity DEX",
-    link: "https://www.orca.so"
-  }, {
-    name: "Phantom",
-    logo: "/lovable-uploads/55abe780-a166-4881-969c-0cb6190bf7e5.png",
-    description: "Non-Custodial Wallet",
-    link: "https://phantom.app"
   }];
 
   const containerVariants = {
