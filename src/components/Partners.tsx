@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -86,13 +85,13 @@ const Partners = () => {
                     <img 
                       src={partner.logo} 
                       alt={partner.name} 
-                      className={`w-24 h-24 object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 rounded-full p-3 ${
+                      className={`w-24 h-24 object-contain opacity-80 group-hover:opacity-100 transition-all duration-500 rounded-full p-3 ${
                         partner.name === 'Dexscreener' 
                           ? 'filter brightness-110 contrast-125 saturate-150 bg-[#6E59A5]/10' 
                           : partner.name === 'Jupiter' 
                           ? 'filter brightness-90 contrast-125 hue-rotate-30'
                           : partner.name === 'Raydium'
-                          ? 'filter brightness-105 contrast-110 bg-gradient-to-r from-[#2B6EFD]/10 to-[#9945FF]/10'
+                          ? 'filter brightness-105 contrast-110 bg-gradient-to-r from-[#2B6EFD]/10 to-[#9945FF]/10 shadow-md'
                           : ''
                       }`}
                       onError={e => {
