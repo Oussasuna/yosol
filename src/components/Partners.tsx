@@ -2,8 +2,6 @@ import React from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
 
 const Partners = () => {
   const partners = [{
@@ -146,17 +144,6 @@ const Partners = () => {
             </motion.a>
           ))}
         </motion.div>
-        
-        <div className="mt-12 text-center">
-          <Button 
-            className="bg-gradient-to-r from-solana to-wallet-accent text-white hover:opacity-90 transition-opacity duration-300 gap-2 group"
-            asChild
-          >
-            <a href="https://solana.com/ecosystem" target="_blank" rel="noopener noreferrer">
-              Explore Solana Ecosystem <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-            </a>
-          </Button>
-        </div>
       </div>
     </section>
   );
