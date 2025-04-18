@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { Card } from "@/components/ui/card";
 const Partners = () => {
   const partners = [{
     name: "Dexscreener",
-    logo: "/lovable-uploads/150888b3-9f51-49dc-aa5f-7e3c7f7a906d.png",
+    logo: "/lovable-uploads/4b4e137f-d0f4-4bc8-894b-213db804d5f7.png",
     description: "DEX Analytics Platform",
     link: "https://dexscreener.com"
   }, {
