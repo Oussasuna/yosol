@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -86,21 +85,21 @@ const Partners = () => {
                     <img 
                       src={partner.logo} 
                       alt={partner.name} 
-                      className={`${partner.name === 'Solana' ? 'w-24 h-24' : 'w-24 h-24'} object-contain opacity-80 group-hover:opacity-100 transition-all duration-500 rounded-full p-3`}
+                      className={`${partner.name === 'Solana' ? 'w-24 h-24' : 'w-24 h-24'} object-contain opacity-80 group-hover:opacity-100 transition-all duration-500 rounded-none p-0`}
                       onError={e => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/placeholder.svg";
                       }} 
                     />
-                    <div className={`absolute inset-0 rounded-full blur-xl opacity-0 group-hover:opacity-70 transition-all duration-500 ${
-                      partner.name === 'Dexscreener' 
-                        ? 'bg-gradient-to-r from-[#6E59A5]/20 to-[#9b87f5]/20'
-                        : partner.name === 'Jupiter' 
-                        ? 'bg-gradient-to-r from-[#6E59A5]/10 to-[#9b87f5]/10'
-                        : partner.name === 'Raydium'
-                        ? 'bg-gradient-to-r from-[#2B6EFD]/20 to-[#9945FF]/20'
-                        : 'bg-gradient-to-r from-solana/10 to-wallet-accent/10'
-                    }`} />
+                    {partner.name !== 'Solana' && (
+                      <div className={`absolute inset-0 rounded-full blur-xl opacity-0 group-hover:opacity-70 transition-all duration-500 ${
+                        partner.name === 'Dexscreener' 
+                          ? 'bg-gradient-to-r from-[#6E59A5]/20 to-[#9b87f5]/20'
+                          : partner.name === 'Jupiter' 
+                          ? 'bg-gradient-to-r from-[#6E59A5]/10 to-[#9b87f5]/10'
+                          : 'bg-gradient-to-r from-[#2B6EFD]/20 to-[#9945FF]/20'
+                      }`} />
+                    )}
                   </div>
                   <div className="text-center group-hover:transform group-hover:translate-y-[-2px] transition-all duration-500">
                     <h4 className="font-semibold text-lg mb-1 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
@@ -121,4 +120,3 @@ const Partners = () => {
 };
 
 export default Partners;
-
