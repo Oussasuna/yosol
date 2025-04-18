@@ -50,6 +50,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/roadmap" element={<SectionRedirect />} />
               <Route path="/features" element={<SectionRedirect />} />
+              <Route path="/partners" element={<SectionRedirect />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -93,6 +93,7 @@ const NavBar: React.FC = () => {
               { path: '/', label: 'Home' },
               { path: '/dashboard', label: 'Dashboard' },
               { path: '/features', label: 'Features' },
+              { path: '/partners', label: 'Partners' },
               { path: '/roadmap', label: 'Roadmap' }
             ].map((item, index) => (
               <motion.div
@@ -159,6 +160,7 @@ const NavBar: React.FC = () => {
                 { path: '/', label: 'Home' },
                 { path: '/dashboard', label: 'Dashboard' },
                 { path: '/features', label: 'Features' },
+                { path: '/partners', label: 'Partners' },
                 { path: '/roadmap', label: 'Roadmap' }
               ].map((item, index) => (
                 <motion.div
