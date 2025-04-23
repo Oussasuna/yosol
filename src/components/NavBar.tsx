@@ -4,12 +4,14 @@ import { Wallet, ArrowRight, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
+
 const NavBar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -17,9 +19,11 @@ const NavBar: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
+
   const handleNavLinkClick = (path: string, e: React.MouseEvent) => {
     if (path === '/') {
       e.preventDefault();
@@ -47,6 +51,7 @@ const NavBar: React.FC = () => {
       }
     }
   };
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768 && mobileMenuOpen) {
@@ -56,6 +61,7 @@ const NavBar: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [mobileMenuOpen]);
+
   return <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'bg-black/60 backdrop-blur-xl shadow-lg' : 'bg-transparent'}`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
@@ -94,17 +100,31 @@ const NavBar: React.FC = () => {
                   }} className="w-full h-full flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8 text-solana group-hover:text-wallet-accent transition-colors duration-300">
                         <defs>
-                          <linearGradient id="aiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#14F195" stopOpacity="0.8" />
-                            <stop offset="100%" stopColor="#9945FF" stopOpacity="1" />
+                          <linearGradient id="aiGradient3d" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#14F195" stopOpacity="0.9" />
+                            <stop offset="50%" stopColor="#9945FF" stopOpacity="0.8" />
+                            <stop offset="100%" stopColor="#14F195" stopOpacity="0.9" />
                           </linearGradient>
                         </defs>
-                        <g transform="translate(50,50) scale(0.7)">
-                          <path d="M0,-40 
-                               Q20,-20 0,0 
-                               Q-20,20 0,40 
-                               A40,40 0 0,1 0,-40" fill="url(#aiGradient)" stroke="#14F195" strokeWidth="3" />
-                          <circle cx="0" cy="0" r="10" fill="rgba(20,241,149,0.3)" className="animate-pulse" />
+                        <g transform="translate(50,50)">
+                          <path d="M-30,-20 L0,-35 L30,-20 L30,10 L0,25 L-30,10 Z" 
+                                fill="url(#aiGradient3d)" 
+                                stroke="#14F195" 
+                                strokeWidth="2"
+                                className="animate-pulse" />
+                          <path d="M-30,10 L0,25 L0,-5 L-30,-20 Z" 
+                                fill="rgba(20,241,149,0.2)" />
+                          <path d="M0,-5 L0,25 L30,10 L30,-20 Z" 
+                                fill="rgba(153,69,255,0.2)" />
+                          <circle cx="0" cy="-5" r="8" 
+                                fill="rgba(20,241,149,0.3)" 
+                                className="animate-pulse" />
+                          <circle cx="0" cy="-5" r="12" 
+                                fill="none" 
+                                stroke="#14F195" 
+                                strokeWidth="1" 
+                                opacity="0.5"
+                                className="animate-ping" />
                         </g>
                       </svg>
                     </motion.div>
@@ -255,4 +275,5 @@ const NavBar: React.FC = () => {
       </AnimatePresence>
     </header>;
 };
+
 export default NavBar;
