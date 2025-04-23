@@ -27,31 +27,24 @@ const NavBar: React.FC = () => {
 
   const handleNavLinkClick = (path: string, e: React.MouseEvent) => {
     if (path === '/') {
-      // For home link, navigate to home and scroll to top
       e.preventDefault();
       if (location.pathname === '/') {
-        // If we're already on home page, just scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        // If on another page, navigate to home
         navigate('/');
-        // Scroll to top after navigation
         setTimeout(() => {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }, 100);
       }
     } else if (path === '/partners' && location.pathname === '/') {
-      // If we're already on home page and clicking partners, just scroll to partners section
       e.preventDefault();
       const partnersSection = document.getElementById('partners');
       if (partnersSection) {
         partnersSection.scrollIntoView({ behavior: 'smooth' });
       }
     }
-    // All other links use their default behavior
   };
 
-  // Close mobile menu when window is resized to desktop size
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768 && mobileMenuOpen) {
@@ -77,20 +70,34 @@ const NavBar: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Link to="/" className="flex items-center space-x-2 group" onClick={(e) => handleNavLinkClick('/', e)}>
-              <motion.div
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.7, ease: "easeInOut" }}
-              >
-                <Wallet className="h-8 w-8 text-solana group-hover:text-wallet-accent transition-colors duration-300" />
-              </motion.div>
-              <motion.span 
-                className="text-2xl font-semibold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-solana to-wallet-accent"
-                whileHover={{ scale: 1.05 }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              >
-                yosol
-              </motion.span>
+            <Link to="/" className="flex items-center space-x-3 group" onClick={(e) => handleNavLinkClick('/', e)}>
+              <div className="relative">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-wallet-accent via-solana to-wallet-accent p-[2px]"
+                >
+                  <div className="w-full h-full bg-black rounded-lg flex items-center justify-center">
+                    <motion.div
+                      whileHover={{ rotate: 360 }}
+                      transition={{ duration: 0.7, ease: "easeInOut" }}
+                    >
+                      <Wallet className="h-5 w-5 text-solana group-hover:text-wallet-accent transition-colors duration-300" />
+                    </motion.div>
+                  </div>
+                </motion.div>
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-wallet-accent rounded-full animate-pulse" />
+              </div>
+              <div className="flex flex-col items-start">
+                <motion.span 
+                  className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-solana to-wallet-accent"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
+                  VoxSol
+                </motion.span>
+                <span className="text-xs text-muted-foreground">Voice AI Wallet</span>
+              </div>
             </Link>
           </motion.div>
           
@@ -151,7 +158,6 @@ const NavBar: React.FC = () => {
         </div>
       </div>
       
-      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div 
@@ -188,7 +194,6 @@ const NavBar: React.FC = () => {
                 </motion.div>
               ))}
               
-              {/* Add Launch App button to mobile menu */}
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
