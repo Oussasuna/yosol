@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Wallet, ArrowRight, Menu, X } from 'lucide-react';
@@ -73,16 +74,53 @@ const NavBar: React.FC = () => {
             <Link to="/" className="flex items-center space-x-3 group" onClick={(e) => handleNavLinkClick('/', e)}>
               <div className="relative">
                 <motion.div
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-wallet-accent via-solana to-wallet-accent p-[2px]"
+                  className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-wallet-accent via-solana to-wallet-accent p-[2px] shadow-lg"
                 >
-                  <div className="w-full h-full bg-black rounded-lg flex items-center justify-center">
+                  <div className="w-full h-full bg-black rounded-xl flex items-center justify-center overflow-hidden">
                     <motion.div
-                      whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.7, ease: "easeInOut" }}
+                      initial={{ opacity: 0, scale: 0.8, rotateY: -180 }}
+                      animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                      transition={{ 
+                        duration: 0.8, 
+                        type: "spring", 
+                        stiffness: 120, 
+                        damping: 10 
+                      }}
+                      className="w-full h-full flex items-center justify-center"
                     >
-                      <Wallet className="h-5 w-5 text-solana group-hover:text-wallet-accent transition-colors duration-300" />
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 100 100" 
+                        className="w-8 h-8 text-solana group-hover:text-wallet-accent transition-colors duration-300"
+                      >
+                        <defs>
+                          <linearGradient id="aiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#14F195" stopOpacity="0.8"/>
+                            <stop offset="100%" stopColor="#9945FF" stopOpacity="1"/>
+                          </linearGradient>
+                        </defs>
+                        <g transform="translate(50,50) scale(0.7)">
+                          <path 
+                            d="M0,-40 
+                               Q20,-20 0,0 
+                               Q-20,20 0,40 
+                               A40,40 0 0,1 0,-40"
+                            fill="url(#aiGradient)"
+                            stroke="#14F195"
+                            strokeWidth="3"
+                          />
+                          <circle 
+                            cx="0" 
+                            cy="0" 
+                            r="10" 
+                            fill="rgba(20,241,149,0.3)" 
+                            className="animate-pulse"
+                          />
+                        </g>
+                      </svg>
                     </motion.div>
                   </div>
                 </motion.div>
